@@ -1,7 +1,7 @@
 # Capstone-Vehicle-Sim-Project
 **Repository for CS 46X** 
 
-Primary means of team communication: ** Discord **
+Primary means of team communication: **Discord**
 **Current weekly schedule for team mettings:**
 Sunday     - 
 Monday     -
