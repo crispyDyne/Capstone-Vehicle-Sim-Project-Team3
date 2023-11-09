@@ -1,26 +1,26 @@
 # Capstone-Vehicle-Sim-Project
 **Repository for CS 46X** 
 
-Primary means of team communication: Discord
-**Current weekly schedule for team mettings:**
-Sunday     - 
-Monday     -
-Tuesday    -
-Wednesday  -
-Thursday   - Project Partner @6:15pm (Discord), TA @6:45pm (Teams) 
-Friday     - 
-Saturday   - 
+Primary means of team communication: Discord  
+**Current weekly schedule for team mettings:**  
+Sunday     -  
+Monday     -  
+Tuesday    -  
+Wednesday  -  
+Thursday   - Project Partner @6:15pm (Discord), TA @6:45pm (Teams)  
+Friday     -   
+Saturday   -   
 
 
 ## Project Structure:
 
-.
-├── docs/
-├── src/
-├── wip/
-├── .gitignore
-├── LICENSE
-└── README.md
+.  
+├── docs/  
+├── src/  
+├── wip/  
+├── .gitignore  
+├── LICENSE  
+└── README.md  
 
 The docs/ directory contains our supporting team documents for our team deliverables and assignments.
 
