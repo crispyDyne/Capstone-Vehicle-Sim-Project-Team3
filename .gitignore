@@ -5,6 +5,8 @@ dist/
 
 # dependencies
 node_modules/
+#Ignore Bevy Porject Build Location
+src/target/
 
 # logs
 npm-debug.log*
