@@ -4,7 +4,7 @@ Repository for CS 46X
 Primary means of team communication: Discord
 Current weekly schedule for team mettings:
 Sunday     - 
-Monday     - (Maybe a team meeting at some point??)
+Monday     -
 Tuesday    -
 Wednesday  -
 Thursday   - Project Partner @6:15pm (Discord), TA @6:45pm (Teams) 
@@ -31,21 +31,13 @@ The wip/ directory is our Work in Progress directory. It contains assignment tem
 **The LICENSE is currently CC0 and will need to be changed by the end of the year!
 
 
-A Few Things to Address
-Once you've cloned, forked, or simply copied the content of this repository to your own:
 
-Invite your co-contributors/co-developers to make changes to the repository
-Change the license (currently CC0), discuss that with your project partner or sponsor
-Initialize the repository for your programming language (your code should probably end up in src/), including updating the .gitignore
-Learn to build the docs/ (see below) or opt for another documentation solution
-Check out the course templates in wip/
-Create your first issues and organise them in a project/kanban board
-Building the Docs
-Your docs template is Starlight. It's a template for Astro.
+#Project Dependency:
+This project is based on our Project Partner's original vehicle demo.
+The original porject repo can be found here: https://github.com/crispyDyne/bevy_car_demo/tree/main
 
 
 
-PROJECT DESCRIPTION:
 # Bevy Car Demo
 This repo contains a simple car demo using rust and bevy. Consider it a proof of concept for a physics engine in bevy/rust, but there are still a lot of features missing, and likely some bugs. There are glitches that can cause the car to explode, especially when driving aggressively over rough terrain.
 
