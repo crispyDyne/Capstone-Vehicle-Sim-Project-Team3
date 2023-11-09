@@ -1,8 +1,8 @@
 # Capstone-Vehicle-Sim-Project
-Repository for CS 46X
+## Repository for CS 46X
 
-Primary means of team communication: Discord
-Current weekly schedule for team mettings:
+## Primary means of team communication: Discord
+## Current weekly schedule for team mettings:
 Sunday     - 
 Monday     -
 Tuesday    -
@@ -12,7 +12,7 @@ Friday     -
 Saturday   - 
 
 
-Project Structure:
+## Project Structure:
 
 .
 ├── docs/
@@ -32,7 +32,7 @@ The wip/ directory is our Work in Progress directory. It contains assignment tem
 
 
 
-#Project Dependency:
+# Project Dependency:
 This project is based on our Project Partner's original vehicle demo.
 The original porject repo can be found here: https://github.com/crispyDyne/bevy_car_demo/tree/main
 
