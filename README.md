@@ -1,8 +1,8 @@
 # Capstone-Vehicle-Sim-Project
-** Repository for CS 46X ** 
+**Repository for CS 46X** 
 
 Primary means of team communication: ** Discord **
-** Current weekly schedule for team mettings: **
+**Current weekly schedule for team mettings:**
 Sunday     - 
 Monday     -
 Tuesday    -
@@ -28,7 +28,7 @@ The src/ directory contains our codebase for the project.
 
 The wip/ directory is our Work in Progress directory. It contains assignment templates that we will modify/update during the year (e.g., diagrams, design files, documents, reviews, progress reports, etc.)
 
-**The LICENSE is currently CC0 and will need to be changed by the end of the year!
+**The LICENSE is currently CC0 and will need to be changed by the end of the year!**
 
 
 
