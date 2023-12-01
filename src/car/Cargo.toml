@@ -1,0 +1,30 @@
+[package]
+name = "car"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# bevy
+bevy = {workspace = true}
+bevy_obj = {workspace = true}
+
+rigid_body = {workspace = true}
+bevy_integrator = {workspace = true}
+cameras = {workspace = true}
+
+# multiplayer
+bevy_ggrs = {workspace = true, features = ["wasm-bindgen"]}
+bevy_matchbox = {workspace = true, features = ["ggrs"]}
+
+# physics
+grid_terrain = {workspace = true}
+
+[[example]]
+name = "car_json"
+path = "./examples/car_json/main.rs"
+
+[[example]]
+name = "car"
+path = "./examples/car.rs"
