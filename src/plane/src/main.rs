@@ -145,6 +145,8 @@ fn create_plane_mesh(size: f32, subdivisions: i32) -> Mesh {
         }
     }
 
+
+/* Bevy V 1.12.0
     #[rustfmt::skip]
     let plane_mesh = Mesh::new(PrimitiveTopology::TriangleList)
         .with_inserted_attribute(
@@ -160,8 +162,9 @@ fn create_plane_mesh(size: f32, subdivisions: i32) -> Mesh {
             normals,
         )
         .with_indices(Some(Indices::U32(indices)));
-
-    /*
+*/
+        
+    let mut plane_mesh = Mesh::new(PrimitiveTopology::TriangleList);
     plane_mesh.set_indices(Some(Indices::U32(indices)));
 
     plane_mesh.insert_attribute(
@@ -175,7 +178,8 @@ fn create_plane_mesh(size: f32, subdivisions: i32) -> Mesh {
     plane_mesh.insert_attribute(
         Mesh::ATTRIBUTE_UV_0, 
         uvs);
-    */
+
+
 
     plane_mesh
 }
@@ -220,7 +224,7 @@ fn perlin_noise_3d (x: f32, y: f32, z: f32) -> f32 {
     let yf = (y - (yi ) as f32);
     let zf = (z - (zi ) as f32);
 
-    //0.0
+    0.0
     //(xi) as f32
-    x * x
+    //x * x
 }
