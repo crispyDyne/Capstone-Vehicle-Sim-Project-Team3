@@ -47,7 +47,7 @@ pub fn build_car() -> CarDefinition {
         position: [0., 0., 0.],
         initial_position: [-5., 20., 0.3 + 0.25],
         initial_orientation: [0., 0., 0.],
-        mesh_file: Some("models/vehicle/chassis/car_chassis.glb#Scene0".to_string()),
+        mesh_file: Some("models/vehicle/chassis/car_chassisV2.glb#Scene0".to_string()),
     };
 
     // Suspension
@@ -60,10 +60,10 @@ pub fn build_car() -> CarDefinition {
 
     let suspension_names = ["fl", "fr", "rl", "rr"].map(|name| name.to_string());
     let suspension_locations = [
-        [1.25, 0.75, -0.2],
-        [1.25, -0.75, -0.2],
-        [-1.25, 0.75, -0.2],
-        [-1.25, -0.75, -0.2],
+        [1.57, 0.75, -0.2],
+        [1.57, -0.75, -0.2],
+        [-1.31, 0.75, -0.2],
+        [-1.31, -0.75, -0.2],
     ];
 
     let suspension: Vec<Suspension> = suspension_locations
@@ -132,7 +132,7 @@ pub fn build_car() -> CarDefinition {
 
 pub fn build_wheel() -> Wheel {
     let wheel_mass = 20.;
-    let wheel_radius = 0.325_f64;
+    let wheel_radius = 0.4_f64;
     let wheel_moi_y = wheel_mass * wheel_radius.powi(2);
     let wheel_moi_xz = 1. / 12. * 10. * (3. * wheel_radius.powi(2));
     let corner_mass = CHASSIS_MASS / 4. + SUSPENSION_MASS + wheel_mass;
