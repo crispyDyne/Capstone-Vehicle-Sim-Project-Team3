@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 # bevy
-bevy = {workspace = true}
+bevy = {workspace = true, features=["jpeg"]}
 bevy_obj = {workspace = true}
 
 rigid_body = {workspace = true}

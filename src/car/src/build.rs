@@ -47,7 +47,7 @@ pub fn build_car() -> CarDefinition {
         position: [0., 0., 0.],
         initial_position: [-5., 20., 0.3 + 0.25],
         initial_orientation: [0., 0., 0.],
-        mesh_file: None,
+        mesh_file: Some("models/vehicle/chassis/car_chassis.glb#Scene0".to_string()),
     };
 
     // Suspension
@@ -154,14 +154,14 @@ pub fn build_wheel() -> Wheel {
     }
 }
 
-pub fn car_startup_system(mut commands: Commands, car: ResMut<CarDefinition>) {
+pub fn car_startup_system(mut commands: Commands, asset_server: Res<AssetServer>, car: ResMut<CarDefinition>) {
     let base = Joint::base(Motion::new([0., 0., 9.81], [0., 0., 0.]));
     let base_id = commands.spawn((base, Base)).id();
 
     // Chassis
     let chassis_ids = car
         .chassis
-        .build(&mut commands, Color::rgb(0.9, 0.1, 0.2), base_id);
+        .build(&mut commands, asset_server, Color::rgb(0.9, 0.1, 0.2), base_id);
     let chassis_id = chassis_ids[3]; // ids are not ordered by parent child order!!! "3" is rx, the last joint in the chain
 
     let camera_parent_list = vec![
@@ -214,7 +214,7 @@ pub struct Chassis {
 }
 
 impl Chassis {
-    pub fn build(&self, commands: &mut Commands, color: Color, parent_id: Entity) -> Vec<Entity> {
+    pub fn build(&self, commands: &mut Commands, asset_server: Res<AssetServer>, color: Color, parent_id: Entity) -> Vec<Entity> {
         // x degree of freedom (absolute coordinate system, not relative to car)
         let mut px = Joint::px("chassis_px".to_string(), Inertia::zero(), Xform::identity());
         px.q = self.initial_position[0];
@@ -268,13 +268,25 @@ impl Chassis {
         let mut rx_e = commands.spawn((rx,));
         rx_e.set_parent(ry_id);
         let rx_id = rx_e.id();
+        
         if let Some(chassis_file) = &self.mesh_file {
-            rx_e.insert(MeshDef {
-                mesh_type: MeshTypeDef::File {
-                    file_name: chassis_file.to_string(),
-                },
-                transform: TransformDef::from_position(position),
-                color,
+            println!("mesh");
+            /*
+            rx_e.insert(
+                 (Visibility::Visible, 
+                 MeshDef {
+                     mesh_type: MeshTypeDef::File {
+                         file_name: chassis_file.to_string(),
+                     },
+                     transform: TransformDef::from_position(position),
+                     color,
+                 }));
+               */
+             rx_e.insert(SceneBundle {
+                transform: (&TransformDef::from_position(position)).into(),
+              
+                scene: asset_server.load("models/vehicle/chassis/car_chassis.glb#Scene0"),
+                ..default()
             });
         } else {
             rx_e.insert(MeshDef {
@@ -288,7 +300,7 @@ impl Chassis {
                 transform: TransformDef::from_position(position),
                 color,
             });
-        }
+        };
 
         let chassis_ids = vec![px_id, py_id, pz_id, rx_id, ry_id, rz_id];
         // return id the last joint in the chain. It will be the parent of the suspension / wheels
