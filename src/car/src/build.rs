@@ -141,7 +141,7 @@ pub fn build_wheel() -> Wheel {
     Wheel {
         mass: wheel_mass,
         radius: wheel_radius,
-        width: 0.2_f64,
+        width: 0.3_f64,
         moi_y: wheel_moi_y,
         moi_xz: wheel_moi_xz,
         stiffness: [wheel_stiffness, 0.],
