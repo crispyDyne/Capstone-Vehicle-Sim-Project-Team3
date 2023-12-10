@@ -7,6 +7,9 @@ edition = "2021"
 
 [dependencies]
 bevy = {workspace = true}
+noise = { version = "0.8.2", features = ["images"] }
+image = "0.23.14"
+rand = "0.8"
 
 [[example]]
 name = "plane"
