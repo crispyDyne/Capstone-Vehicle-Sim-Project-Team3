@@ -161,7 +161,7 @@ pub fn car_startup_system(mut commands: Commands, asset_server: Res<AssetServer>
     // Chassis
     let chassis_ids = car
         .chassis
-        .build(&mut commands, asset_server, Color::rgb(0.9, 0.1, 0.2), base_id);
+        .build(&mut commands, &asset_server, Color::rgb(0.9, 0.1, 0.2), base_id);
     let chassis_id = chassis_ids[3]; // ids are not ordered by parent child order!!! "3" is rx, the last joint in the chain
 
     let camera_parent_list = vec![
@@ -192,6 +192,7 @@ pub fn car_startup_system(mut commands: Commands, asset_server: Res<AssetServer>
         let id_susp = susp.build(&mut commands, chassis_id, &susp.location);
         let _wheel_id = car.wheel.build(
             &mut commands,
+            &asset_server,
             &susp.name,
             id_susp,
             car.drives[ind].clone(),
@@ -214,7 +215,7 @@ pub struct Chassis {
 }
 
 impl Chassis {
-    pub fn build(&self, commands: &mut Commands, asset_server: Res<AssetServer>, color: Color, parent_id: Entity) -> Vec<Entity> {
+    pub fn build(&self, commands: &mut Commands, asset_server: &Res<AssetServer>, color: Color, parent_id: Entity) -> Vec<Entity> {
         // x degree of freedom (absolute coordinate system, not relative to car)
         let mut px = Joint::px("chassis_px".to_string(), Inertia::zero(), Xform::identity());
         px.q = self.initial_position[0];
@@ -271,17 +272,6 @@ impl Chassis {
         
         if let Some(chassis_file) = &self.mesh_file {
             println!("mesh");
-            /*
-            rx_e.insert(
-                 (Visibility::Visible, 
-                 MeshDef {
-                     mesh_type: MeshTypeDef::File {
-                         file_name: chassis_file.to_string(),
-                     },
-                     transform: TransformDef::from_position(position),
-                     color,
-                 }));
-               */
              rx_e.insert(SceneBundle {
                 transform: (&TransformDef::from_position(position)).into(),
               
@@ -399,6 +389,7 @@ impl Wheel {
     pub fn build(
         &self,
         commands: &mut Commands,
+        asset_server: &Res<AssetServer>,
         corner_name: &String,
         parent_id: Entity,
         driven_wheel: DriveType,
@@ -419,14 +410,12 @@ impl Wheel {
 
         let mut wheel_e = commands.spawn((
             ry,
-            MeshDef {
-                mesh_type: MeshTypeDef::Wheel {
-                    radius: self.radius as f32,
-                    width: self.width as f32,
-                },
-                transform: TransformDef::Identity,
-                color: Color::rgb(0.5, 0.5, 1.0),
-            },
+            //Actual mesh of the Wheel
+            SceneBundle {
+                transform: (&TransformDef::Identity).into(),
+                scene: asset_server.load("models/vehicle/wheel/wheelV2.glb#Scene0"),
+                ..default()
+            }
         ));
 
         // add driven and braked components
