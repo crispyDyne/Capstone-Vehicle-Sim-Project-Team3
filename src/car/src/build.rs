@@ -179,6 +179,7 @@ pub fn car_startup_system(mut commands: Commands, asset_server: Res<AssetServer>
         active: 0, // start with following x, y, z and yaw of chassis
     });
 
+    //This is where the acutal wheels are setup and built on the car.
     for (ind, susp) in car.suspension.iter().enumerate() {
         let braked_wheel = if ind < 2 {
             Some(BrakeWheel {
@@ -270,11 +271,11 @@ impl Chassis {
         rx_e.set_parent(ry_id);
         let rx_id = rx_e.id();
         
+        //Insert the car chassis into the rx roll degree of freedom joint entity.
         if let Some(chassis_file) = &self.mesh_file {
             println!("mesh");
              rx_e.insert(SceneBundle {
                 transform: (&TransformDef::from_position(position)).into(),
-              
                 scene: asset_server.load("models/vehicle/chassis/car_chassis.glb#Scene0"),
                 ..default()
             });
@@ -410,7 +411,7 @@ impl Wheel {
 
         let mut wheel_e = commands.spawn((
             ry,
-            //Actual mesh of the Wheel
+            //Assign the mesh of the wheel model
             SceneBundle {
                 transform: (&TransformDef::Identity).into(),
                 scene: asset_server.load("models/vehicle/wheel/wheelV2.glb#Scene0"),
