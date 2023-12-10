@@ -47,7 +47,7 @@ pub fn build_car() -> CarDefinition {
         position: [0., 0., 0.],
         initial_position: [-5., 20., 0.3 + 0.25],
         initial_orientation: [0., 0., 0.],
-        mesh_file: None,
+        mesh_file: Some("models/vehicle/chassis/car_chassisV2.glb#Scene0".to_string()),
     };
 
     // Suspension
@@ -60,10 +60,10 @@ pub fn build_car() -> CarDefinition {
 
     let suspension_names = ["fl", "fr", "rl", "rr"].map(|name| name.to_string());
     let suspension_locations = [
-        [1.25, 0.75, -0.2],
-        [1.25, -0.75, -0.2],
-        [-1.25, 0.75, -0.2],
-        [-1.25, -0.75, -0.2],
+        [1.57, 0.75, -0.2],
+        [1.57, -0.75, -0.2],
+        [-1.31, 0.75, -0.2],
+        [-1.31, -0.75, -0.2],
     ];
 
     let suspension: Vec<Suspension> = suspension_locations
@@ -132,7 +132,7 @@ pub fn build_car() -> CarDefinition {
 
 pub fn build_wheel() -> Wheel {
     let wheel_mass = 20.;
-    let wheel_radius = 0.325_f64;
+    let wheel_radius = 0.4_f64;
     let wheel_moi_y = wheel_mass * wheel_radius.powi(2);
     let wheel_moi_xz = 1. / 12. * 10. * (3. * wheel_radius.powi(2));
     let corner_mass = CHASSIS_MASS / 4. + SUSPENSION_MASS + wheel_mass;
@@ -141,7 +141,7 @@ pub fn build_wheel() -> Wheel {
     Wheel {
         mass: wheel_mass,
         radius: wheel_radius,
-        width: 0.2_f64,
+        width: 0.3_f64,
         moi_y: wheel_moi_y,
         moi_xz: wheel_moi_xz,
         stiffness: [wheel_stiffness, 0.],
@@ -154,14 +154,14 @@ pub fn build_wheel() -> Wheel {
     }
 }
 
-pub fn car_startup_system(mut commands: Commands, car: ResMut<CarDefinition>) {
+pub fn car_startup_system(mut commands: Commands, asset_server: Res<AssetServer>, car: ResMut<CarDefinition>) {
     let base = Joint::base(Motion::new([0., 0., 9.81], [0., 0., 0.]));
     let base_id = commands.spawn((base, Base)).id();
 
     // Chassis
     let chassis_ids = car
         .chassis
-        .build(&mut commands, Color::rgb(0.9, 0.1, 0.2), base_id);
+        .build(&mut commands, &asset_server, Color::rgb(0.9, 0.1, 0.2), base_id);
     let chassis_id = chassis_ids[3]; // ids are not ordered by parent child order!!! "3" is rx, the last joint in the chain
 
     let camera_parent_list = vec![
@@ -179,12 +179,14 @@ pub fn car_startup_system(mut commands: Commands, car: ResMut<CarDefinition>) {
         active: 0, // start with following x, y, z and yaw of chassis
     });
 
+    //This is where the acutal wheels are setup and built on the car.
     for (ind, susp) in car.suspension.iter().enumerate() {
         let braked_wheel = if ind < 2 {
             Some(BrakeWheel {
                 max_torque: car.brake.front_torque,
             })
         } else {
+            
             Some(BrakeWheel {
                 max_torque: car.brake.rear_torque,
             })
@@ -192,6 +194,8 @@ pub fn car_startup_system(mut commands: Commands, car: ResMut<CarDefinition>) {
         let id_susp = susp.build(&mut commands, chassis_id, &susp.location);
         let _wheel_id = car.wheel.build(
             &mut commands,
+            &asset_server,
+            ind,
             &susp.name,
             id_susp,
             car.drives[ind].clone(),
@@ -214,7 +218,7 @@ pub struct Chassis {
 }
 
 impl Chassis {
-    pub fn build(&self, commands: &mut Commands, color: Color, parent_id: Entity) -> Vec<Entity> {
+    pub fn build(&self, commands: &mut Commands, asset_server: &Res<AssetServer>, color: Color, parent_id: Entity) -> Vec<Entity> {
         // x degree of freedom (absolute coordinate system, not relative to car)
         let mut px = Joint::px("chassis_px".to_string(), Inertia::zero(), Xform::identity());
         px.q = self.initial_position[0];
@@ -268,13 +272,14 @@ impl Chassis {
         let mut rx_e = commands.spawn((rx,));
         rx_e.set_parent(ry_id);
         let rx_id = rx_e.id();
-        if let Some(chassis_file) = &self.mesh_file {
-            rx_e.insert(MeshDef {
-                mesh_type: MeshTypeDef::File {
-                    file_name: chassis_file.to_string(),
-                },
-                transform: TransformDef::from_position(position),
-                color,
+        
+        //Insert the car chassis into the rx roll degree of freedom joint entity.
+        if let Some(_chassis_file) = &self.mesh_file {
+            println!("mesh");
+             rx_e.insert(SceneBundle {
+                transform: (&TransformDef::from_position(position)).into(),
+                scene: asset_server.load("models/vehicle/chassis/car_chassis.glb#Scene0"),
+                ..default()
             });
         } else {
             rx_e.insert(MeshDef {
@@ -288,7 +293,7 @@ impl Chassis {
                 transform: TransformDef::from_position(position),
                 color,
             });
-        }
+        };
 
         let chassis_ids = vec![px_id, py_id, pz_id, rx_id, ry_id, rz_id];
         // return id the last joint in the chain. It will be the parent of the suspension / wheels
@@ -387,6 +392,8 @@ impl Wheel {
     pub fn build(
         &self,
         commands: &mut Commands,
+        asset_server: &Res<AssetServer>,
+        index: usize,
         corner_name: &String,
         parent_id: Entity,
         driven_wheel: DriveType,
@@ -405,17 +412,31 @@ impl Wheel {
         let mut ry = Joint::ry(name, inertia, Xform::identity());
         ry.qd = initial_speed;
 
-        let mut wheel_e = commands.spawn((
-            ry,
-            MeshDef {
-                mesh_type: MeshTypeDef::Wheel {
-                    radius: self.radius as f32,
-                    width: self.width as f32,
-                },
-                transform: TransformDef::Identity,
-                color: Color::rgb(0.5, 0.5, 1.0),
-            },
-        ));
+        let mut wheel_e;
+        //Check which side this wheel model should be displayed as depending on index number at setup (Left or Right)
+        if index == 1 || index == 3 {
+            wheel_e = commands.spawn((
+                ry,
+                //Assign the mesh of the wheel model
+                SceneBundle {
+                    transform: (&TransformDef::Identity).into(),
+                    scene: asset_server.load("models/vehicle/wheel/wheelR.glb#Scene0"),
+                    ..default()
+                }
+            ));
+        }
+        else {
+            wheel_e = commands.spawn((
+                ry,
+                //Assign the mesh of the wheel model
+                SceneBundle {
+                    transform: (&TransformDef::Identity).into(),
+                    scene: asset_server.load("models/vehicle/wheel/wheelL.glb#Scene0"),
+                    ..default()
+                }
+            ));
+        }
+        
 
         // add driven and braked components
         match driven_wheel {
