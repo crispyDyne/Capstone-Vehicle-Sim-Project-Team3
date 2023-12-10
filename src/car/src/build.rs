@@ -186,6 +186,7 @@ pub fn car_startup_system(mut commands: Commands, asset_server: Res<AssetServer>
                 max_torque: car.brake.front_torque,
             })
         } else {
+            
             Some(BrakeWheel {
                 max_torque: car.brake.rear_torque,
             })
@@ -194,6 +195,7 @@ pub fn car_startup_system(mut commands: Commands, asset_server: Res<AssetServer>
         let _wheel_id = car.wheel.build(
             &mut commands,
             &asset_server,
+            ind,
             &susp.name,
             id_susp,
             car.drives[ind].clone(),
@@ -272,7 +274,7 @@ impl Chassis {
         let rx_id = rx_e.id();
         
         //Insert the car chassis into the rx roll degree of freedom joint entity.
-        if let Some(chassis_file) = &self.mesh_file {
+        if let Some(_chassis_file) = &self.mesh_file {
             println!("mesh");
              rx_e.insert(SceneBundle {
                 transform: (&TransformDef::from_position(position)).into(),
@@ -391,6 +393,7 @@ impl Wheel {
         &self,
         commands: &mut Commands,
         asset_server: &Res<AssetServer>,
+        index: usize,
         corner_name: &String,
         parent_id: Entity,
         driven_wheel: DriveType,
@@ -409,15 +412,31 @@ impl Wheel {
         let mut ry = Joint::ry(name, inertia, Xform::identity());
         ry.qd = initial_speed;
 
-        let mut wheel_e = commands.spawn((
-            ry,
-            //Assign the mesh of the wheel model
-            SceneBundle {
-                transform: (&TransformDef::Identity).into(),
-                scene: asset_server.load("models/vehicle/wheel/wheelV2.glb#Scene0"),
-                ..default()
-            }
-        ));
+        let mut wheel_e;
+        //Check which side this wheel model should be displayed as depending on index number at setup (Left or Right)
+        if index == 1 || index == 3 {
+            wheel_e = commands.spawn((
+                ry,
+                //Assign the mesh of the wheel model
+                SceneBundle {
+                    transform: (&TransformDef::Identity).into(),
+                    scene: asset_server.load("models/vehicle/wheel/wheelR.glb#Scene0"),
+                    ..default()
+                }
+            ));
+        }
+        else {
+            wheel_e = commands.spawn((
+                ry,
+                //Assign the mesh of the wheel model
+                SceneBundle {
+                    transform: (&TransformDef::Identity).into(),
+                    scene: asset_server.load("models/vehicle/wheel/wheelL.glb#Scene0"),
+                    ..default()
+                }
+            ));
+        }
+        
 
         // add driven and braked components
         match driven_wheel {
