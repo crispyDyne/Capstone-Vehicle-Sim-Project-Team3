@@ -21,8 +21,10 @@ bevy_integrator = { path = "./integrator" }
 cameras = { path = "./cameras" }
 
 # multiplayer
-bevy_ggrs = { version = "0.14", features = ["wasm-bindgen"] }
-bevy_matchbox = { version = "0.8", features = ["ggrs"] }
+bevy_ggrs = "0.14"
+bevy_matchbox = { git="https://github.com/johanhelsing/matchbox", features = ["ggrs"] }
+bytemuck = { version = "1.14", features = ["derive"] }
+ggrs = "0.10"
 
 # physics
 grid_terrain = { path = "./grid_terrain" }

@@ -15,8 +15,10 @@ bevy_integrator = {workspace = true}
 cameras = {workspace = true}
 
 # multiplayer
-bevy_ggrs = {workspace = true, features = ["wasm-bindgen"]}
+bevy_ggrs = {workspace = true}
 bevy_matchbox = {workspace = true, features = ["ggrs"]}
+bytemuck = {workspace = true, features = ["derive"]}
+ggrs = {workspace = true}
 
 # physics
 grid_terrain = {workspace = true}
