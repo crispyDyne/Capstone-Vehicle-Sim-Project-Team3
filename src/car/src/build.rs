@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use bevy_ggrs::prelude::*;
-use bevy_matchbox::prelude::PeerId;
+//use bevy_ggrs::prelude::*;
+//use bevy_matchbox::prelude::PeerId;
 
 use cameras::control::CameraParentList;
 use rigid_body::{
@@ -26,22 +26,9 @@ pub struct CarDefinition {
     brake: Brake,
 }
 
-#[derive(Component)]
-pub struct Player {
-    pub car_definition: CarDefinition,
-}
-
 const CHASSIS_MASS: f64 = 1000.;
 const SUSPENSION_MASS: f64 = 20.;
 const GRAVITY: f64 = 9.81;
-
-pub fn create_player() -> Player {
-    let car_definition = build_car();
-    
-    Player {
-        car_definition,
-    }
-}
 
 pub fn build_car() -> CarDefinition {
     // Chassis

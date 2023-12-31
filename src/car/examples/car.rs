@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 use bevy::prelude::*;
 use bevy_ggrs::*;
 use bevy_matchbox::prelude::*;
@@ -6,7 +8,7 @@ use bevy_matchbox::prelude::*;
 
 use bevy_integrator::{SimTime, Solver};
 use car::{
-    build::{create_player, build_car, car_startup_system},
+    build::{build_car, car_startup_system},
     environment::build_environment,
     setup::{camera_setup, simulation_setup},
 };
@@ -14,7 +16,7 @@ use rigid_body::plugin::RigidBodyPlugin;
 
 // Main function
 fn main() {
-    let player1 = create_player();
+    let car_definition = build_car();
     // Create App
     App::new()
         .add_plugins(RigidBodyPlugin {
@@ -24,10 +26,10 @@ fn main() {
             environment_setup: vec![camera_setup],
             name: "car_demo".to_string(),
         })
-        .insert_resource(player1.car_definition)
+        .insert_resource(car_definition)
         .add_systems(Startup, car_startup_system)
         .add_systems(Startup, build_environment)
-        .add_systems(Startup, start_matchbox_socket) // Add create_player here later
+        //.add_systems(Startup, start_matchbox_socket) // Add create_player here later
         .run();
 }
 
