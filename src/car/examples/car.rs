@@ -32,9 +32,3 @@ fn main() {
         //.add_systems(Startup, start_matchbox_socket) // Add create_player here later
         .run();
 }
-
-fn start_matchbox_socket(mut commands: Commands) {
-    let room_url = "ws://127.0.0.1:3536/vehicle_sim"; // Port 3536
-    info!("connecting to matchbox server: {room_url}");
-    commands.insert_resource(MatchboxSocket::new_ggrs(room_url));
-}

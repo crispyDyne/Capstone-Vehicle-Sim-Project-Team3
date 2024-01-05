@@ -30,6 +30,12 @@ const CHASSIS_MASS: f64 = 1000.;
 const SUSPENSION_MASS: f64 = 20.;
 const GRAVITY: f64 = 9.81;
 
+/*
+ * Defines a car's specifications to later be built by car_startup_system().
+ * 
+ * Inputs: none
+ * Outputs: CarDefinition - The struct containing the car's specifications
+ */
 pub fn build_car() -> CarDefinition {
     // Chassis
     let mass = 1000.;
@@ -156,6 +162,7 @@ pub fn build_wheel() -> Wheel {
     }
 }
 
+// Gregg: Edit this one, for loop it, and have it take in an array of car: ResMut<CarDefinition> passed in from main in car.rs
 pub fn car_startup_system(mut commands: Commands, car: ResMut<CarDefinition>) {
     let base = Joint::base(Motion::new([0., 0., 9.81], [0., 0., 0.]));
     let base_id = commands.spawn((base, Base)).id();
