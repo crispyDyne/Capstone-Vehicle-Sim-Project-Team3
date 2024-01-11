@@ -26,6 +26,16 @@ pub struct CarDefinition {
     brake: Brake,
 }
 
+/*
+ * PlayerList
+ * Contains the list of players that are currently a part of this game session
+ */
+#[derive(Resource)]
+pub struct PlayerList {
+    pub cars: Vec<CarDefinition>,
+    pub playernames: Vec<String>,
+}
+
 const CHASSIS_MASS: f64 = 1000.;
 const SUSPENSION_MASS: f64 = 20.;
 const GRAVITY: f64 = 9.81;
@@ -163,12 +173,12 @@ pub fn build_wheel() -> Wheel {
 }
 
 // Gregg: Edit this one, for loop it, and have it take in an array of car: ResMut<CarDefinition> passed in from main in car.rs
-pub fn car_startup_system(mut commands: Commands, car: ResMut<CarDefinition>) {
+pub fn car_startup_system(mut commands: Commands, players: ResMut<PlayerList>) {
     let base = Joint::base(Motion::new([0., 0., 9.81], [0., 0., 0.]));
     let base_id = commands.spawn((base, Base)).id();
 
     // Chassis
-    let chassis_ids = car
+    let chassis_ids = players.cars[0]
         .chassis
         .build(&mut commands, Color::rgb(0.9, 0.1, 0.2), base_id);
     let chassis_id = chassis_ids[3]; // ids are not ordered by parent child order!!! "3" is rx, the last joint in the chain
@@ -188,22 +198,22 @@ pub fn car_startup_system(mut commands: Commands, car: ResMut<CarDefinition>) {
         active: 0, // start with following x, y, z and yaw of chassis
     });
 
-    for (ind, susp) in car.suspension.iter().enumerate() {
+    for (ind, susp) in players.cars[0].suspension.iter().enumerate() {
         let braked_wheel = if ind < 2 {
             Some(BrakeWheel {
-                max_torque: car.brake.front_torque,
+                max_torque: players.cars[0].brake.front_torque,
             })
         } else {
             Some(BrakeWheel {
-                max_torque: car.brake.rear_torque,
+                max_torque: players.cars[0].brake.rear_torque,
             })
         };
         let id_susp = susp.build(&mut commands, chassis_id, &susp.location);
-        let _wheel_id = car.wheel.build(
+        let _wheel_id = players.cars[0].wheel.build(
             &mut commands,
             &susp.name,
             id_susp,
-            car.drives[ind].clone(),
+            players.cars[0].drives[ind].clone(),
             braked_wheel,
             0.,
         );
