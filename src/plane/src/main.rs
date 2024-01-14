@@ -3,8 +3,9 @@ use bevy::render::mesh::Indices;
 use bevy::render::render_resource::PrimitiveTopology;
 
 //Ezra Code Start
-use noise::{Fbm, Perlin};
+use noise::{Fbm, Perlin, Seedable};
 use noise::utils::{NoiseMapBuilder, PlaneMapBuilder};
+use rand::Rng;
 use std::io::{stdout, Write};
 use image::{GenericImageView, DynamicImage, Luma};
 //Ezra Code End
@@ -16,18 +17,15 @@ fn main()
     let mut lock = stdout().lock();
     writeln!(lock, "hello world").unwrap();
     
+    // Generate seed
+    let mut rng = rand::thread_rng();
+    let seed: u32 = rng.gen();
+
     // Generate height map
-    let fbm = Fbm::<Perlin>::new(0);
-    /*
+    let fbm = Fbm::<Perlin>::new(seed);
+
     PlaneMapBuilder::<_, 2>::new(&fbm)
-    .set_size(100, 100)
-    .set_x_bounds(-10000.0, 10000.0)
-    .set_y_bounds(-10000.0, 10000.0)
-    .build()
-    .write_to_file("fbm.png");
-    */
-    PlaneMapBuilder::<_, 2>::new(&fbm)
-            .set_size(5000, 5000)
+            .set_size(130, 130)
             .set_x_bounds(-1.0, 1.0)
             .set_y_bounds(-1.0, 1.0)
             .build()
@@ -40,7 +38,6 @@ fn main()
         .add_systems(Startup, setup)
         .run();
 }
-
 
 
 fn setup(
@@ -92,7 +89,7 @@ fn create_plane_mesh(size: f32, subdivisions: i32) -> Mesh {
 
     // Ezra Code Start
     // Load the image of hightmap (FIX THIS!!!!!)
-    let img_path = r"src\example_images\fbm.png";
+    let img_path = r"C:\Users\Ezraa\Desktop\TEST\Capstone-Vehicle-Sim-Project-Team3\src\example_images\fbm.png";
     let img = image::open(img_path).expect("Failed to open image");
         
     // Extract pixel values as f32 numbers
@@ -117,6 +114,7 @@ fn create_plane_mesh(size: f32, subdivisions: i32) -> Mesh {
             let xi = x as f32 / (x_vertices - 1) as f32;
             let zi = z as f32 / (z_vertices - 1) as f32;
             //let yi = 0.0 as f32;
+
             // Ezra Code Start
             let yi = current_value as f32;
             // Ezra Code End
@@ -134,7 +132,7 @@ fn create_plane_mesh(size: f32, subdivisions: i32) -> Mesh {
 
             // Ezra Code Start
             //y_pos needs to be a pretty small number to not spike wild style
-            let y_pos = (yi - 0.5) / size;
+            let y_pos = (yi - 0.5) * 0.5;
             //Ezra Code End
 
             // build vertices/positions via set of squares
