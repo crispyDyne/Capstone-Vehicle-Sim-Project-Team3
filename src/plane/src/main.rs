@@ -17,7 +17,7 @@ fn main()
     writeln!(lock, "hello world").unwrap();
     
     // Generate height map
-    let fbm = Fbm::<Perlin>::new(0);
+    let fbm = Fbm::<Perlin>::new(2348956);
     /*
     PlaneMapBuilder::<_, 2>::new(&fbm)
     .set_size(100, 100)
@@ -27,7 +27,7 @@ fn main()
     .write_to_file("fbm.png");
     */
     PlaneMapBuilder::<_, 2>::new(&fbm)
-            .set_size(5000, 5000)
+            .set_size(130, 130)
             .set_x_bounds(-1.0, 1.0)
             .set_y_bounds(-1.0, 1.0)
             .build()
@@ -92,7 +92,8 @@ fn create_plane_mesh(size: f32, subdivisions: i32) -> Mesh {
 
     // Ezra Code Start
     // Load the image of hightmap (FIX THIS!!!!!)
-    let img_path = r"src\example_images\fbm.png";
+    let img_path = r"C:\rustbevy\Capstone-Vehicle-Sim-Project-Team3\src\example_images\fbm.png";
+
     let img = image::open(img_path).expect("Failed to open image");
         
     // Extract pixel values as f32 numbers
@@ -134,7 +135,7 @@ fn create_plane_mesh(size: f32, subdivisions: i32) -> Mesh {
 
             // Ezra Code Start
             //y_pos needs to be a pretty small number to not spike wild style
-            let y_pos = (yi - 0.5) / size;
+            let y_pos = (yi - 0.5);
             //Ezra Code End
 
             // build vertices/positions via set of squares
