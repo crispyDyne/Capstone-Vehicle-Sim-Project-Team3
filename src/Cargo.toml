@@ -13,7 +13,6 @@ resolver = "2"
 bevy = "0.11.2"
 bevy_obj = "0.11.0"
 
-
 car = { path = "./car" }
 data_viewer = { path = "./data_viewer" }
 rigid_body = { path = "./rigid_body"}
@@ -31,6 +30,9 @@ grid_terrain = { path = "./grid_terrain" }
 
 itertools = "0.11.0"
 nalgebra = "0.32.2"
+
+# other
+rand = "0.8.5"
 
 # Enable only a small amount of optimization in debug mode
 [profile.dev]

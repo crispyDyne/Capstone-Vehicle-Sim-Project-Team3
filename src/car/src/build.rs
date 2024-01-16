@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use rand::Rng;
 //use bevy_ggrs::prelude::*;
 //use bevy_matchbox::prelude::PeerId;
 
@@ -27,7 +28,7 @@ pub struct CarDefinition {
 }
 
 /*
- * PlayerList
+ * struct PlayerList
  * Contains the list of players that are currently a part of this game session
  */
 #[derive(Resource)]
@@ -46,7 +47,12 @@ const GRAVITY: f64 = 9.81;
  * Inputs: none
  * Outputs: CarDefinition - The struct containing the car's specifications
  */
-pub fn build_car() -> CarDefinition {
+pub fn build_car(startposition: [f64; 3]) -> CarDefinition {
+    // Separate the start position into x, y, z coordinates
+    let xpos = startposition[0];
+    let ypos = startposition[1];
+    let zpos = startposition[2];
+    
     // Chassis
     let mass = 1000.;
     let dimensions = [3.0_f64, 1.2, 0.4]; // shape of rectangular chassis
@@ -59,11 +65,11 @@ pub fn build_car() -> CarDefinition {
 
     let chassis = Chassis {
         mass,
-        cg_position: [0., 0., 0.],
+        cg_position: startposition,
         moi,
         dimensions,
-        position: [0., 0., 0.],
-        initial_position: [-5., 20., 0.3 + 0.25],
+        position: startposition,
+        initial_position: [-5. + xpos, 20. + ypos, 0.3 + 0.25 + zpos],
         initial_orientation: [0., 0., 0.],
         mesh_file: None,
     };
@@ -78,10 +84,10 @@ pub fn build_car() -> CarDefinition {
 
     let suspension_names = ["fl", "fr", "rl", "rr"].map(|name| name.to_string());
     let suspension_locations = [
-        [1.25, 0.75, -0.2],
-        [1.25, -0.75, -0.2],
-        [-1.25, 0.75, -0.2],
-        [-1.25, -0.75, -0.2],
+        [1.25 + xpos, 0.75 + ypos, -0.2 + zpos],
+        [1.25 + xpos, -0.75 + ypos, -0.2 + zpos],
+        [-1.25 + xpos, 0.75 + ypos, -0.2 + zpos],
+        [-1.25 + xpos, -0.75 + ypos, -0.2 + zpos],
     ];
 
     let suspension: Vec<Suspension> = suspension_locations
@@ -174,49 +180,58 @@ pub fn build_wheel() -> Wheel {
 
 // Gregg: Edit this one, for loop it, and have it take in an array of car: ResMut<CarDefinition> passed in from main in car.rs
 pub fn car_startup_system(mut commands: Commands, players: ResMut<PlayerList>) {
-    let base = Joint::base(Motion::new([0., 0., 9.81], [0., 0., 0.]));
-    let base_id = commands.spawn((base, Base)).id();
+    println!("Starting up car for players:");
+    for player in &players.playernames {
+        println!("{}", player);
+    } 
+    for car in &players.cars {
 
-    // Chassis
-    let chassis_ids = players.cars[0]
-        .chassis
-        .build(&mut commands, Color::rgb(0.9, 0.1, 0.2), base_id);
-    let chassis_id = chassis_ids[3]; // ids are not ordered by parent child order!!! "3" is rx, the last joint in the chain
+        let base = Joint::base(Motion::new([0., 0., 9.81], [0., 0., 0.]));
+        let base_id = commands.spawn((base, Base)).id();
+        
+        let mut rng = rand::thread_rng();
 
-    let camera_parent_list = vec![
-        chassis_ids[5], // follow x, y and z and yaw of chassis
-        // chassis_ids[0], // only follow x of chassis (why would you do that?)
-        chassis_ids[1], // follow x and y of chassis
-        chassis_ids[2], // follow x, y and z of chassis
-        chassis_ids[3], // follow all motion of chassis
-        base_id,        // stationary camera
-                        // chassis_ids[4],
-    ];
+        // Chassis
+        let chassis_ids = car
+            .chassis
+            .build(&mut commands, Color::rgb(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>()), base_id);
+        let chassis_id = chassis_ids[3]; // ids are not ordered by parent child order!!! "3" is rx, the last joint in the chain
 
-    commands.insert_resource(CameraParentList {
-        list: camera_parent_list,
-        active: 0, // start with following x, y, z and yaw of chassis
-    });
+        let camera_parent_list = vec![
+            chassis_ids[5], // follow x, y and z and yaw of chassis
+            // chassis_ids[0], // only follow x of chassis (why would you do that?)
+            chassis_ids[1], // follow x and y of chassis
+            chassis_ids[2], // follow x, y and z of chassis
+            chassis_ids[3], // follow all motion of chassis
+            base_id,        // stationary camera
+                            // chassis_ids[4],
+        ];
 
-    for (ind, susp) in players.cars[0].suspension.iter().enumerate() {
-        let braked_wheel = if ind < 2 {
-            Some(BrakeWheel {
-                max_torque: players.cars[0].brake.front_torque,
-            })
-        } else {
-            Some(BrakeWheel {
-                max_torque: players.cars[0].brake.rear_torque,
-            })
-        };
-        let id_susp = susp.build(&mut commands, chassis_id, &susp.location);
-        let _wheel_id = players.cars[0].wheel.build(
-            &mut commands,
-            &susp.name,
-            id_susp,
-            players.cars[0].drives[ind].clone(),
-            braked_wheel,
-            0.,
-        );
+        commands.insert_resource(CameraParentList {
+            list: camera_parent_list,
+            active: 0, // start with following x, y, z and yaw of chassis
+        });
+
+        for (ind, susp) in car.suspension.iter().enumerate() {
+            let braked_wheel = if ind < 2 {
+                Some(BrakeWheel {
+                    max_torque: car.brake.front_torque,
+                })
+            } else {
+                Some(BrakeWheel {
+                    max_torque: car.brake.rear_torque,
+                })
+            };
+            let id_susp = susp.build(&mut commands, chassis_id, &susp.location);
+            let _wheel_id = car.wheel.build(
+                &mut commands,
+                &susp.name,
+                id_susp,
+                car.drives[ind].clone(),
+                braked_wheel,
+                0.,
+            );
+        }
     }
 }
 

@@ -1818,6 +1818,7 @@ dependencies = [
  "cameras",
  "ggrs",
  "grid_terrain",
+ "rand",
  "rigid_body",
 ]
 

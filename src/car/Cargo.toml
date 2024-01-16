@@ -23,6 +23,9 @@ ggrs = {workspace = true}
 # physics
 grid_terrain = {workspace = true}
 
+# other
+rand = {workspace = true}
+
 [[example]]
 name = "car_json"
 path = "./examples/car_json/main.rs"

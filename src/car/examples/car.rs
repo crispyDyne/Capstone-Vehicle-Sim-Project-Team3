@@ -18,14 +18,14 @@ use rigid_body::plugin::RigidBodyPlugin;
 fn main() {
     // Create cars
     let mut car_definitions = Vec::new();
-    car_definitions.push(build_car());
-    car_definitions.push(build_car());
+    car_definitions.push(build_car([0., 0., 0.]));
+    car_definitions.push(build_car([0., 3., 0.]));
 
     let mut player_names = Vec::new();
     player_names.push("Player 1".to_string());
     player_names.push("Player 2".to_string());
 
-    let mut players = PlayerList {
+    let players = PlayerList {
         cars: car_definitions,
         playernames: player_names,
     };
