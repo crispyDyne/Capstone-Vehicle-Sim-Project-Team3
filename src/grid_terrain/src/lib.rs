@@ -1,6 +1,7 @@
 pub mod examples;
 pub mod function;
 pub mod mirror;
+pub mod perlin;
 pub mod plane;
 pub mod rotate;
 pub mod slope;

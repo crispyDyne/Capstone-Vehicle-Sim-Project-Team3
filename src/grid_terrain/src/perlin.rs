@@ -10,7 +10,7 @@ use rigid_body::sva::Vector;
 //use bevy::render::render_resource::PrimitiveTopology;
 
 //Ezra Code Start
-use noise::{Fbm, Perlin};
+use noise::{Fbm, Perlin as PerlinNoise};
 use noise::utils::{NoiseMapBuilder, PlaneMapBuilder};
 use std::io::{stdout, Write};
 use image::{GenericImageView, DynamicImage, Luma};
@@ -19,18 +19,37 @@ use image::{GenericImageView, DynamicImage, Luma};
 
 use crate::{GridElement, Interference};
 
-pub struct Plane {
-    pub size: [f64; 2],
-    pub subdivisions: u32,
+pub struct HeightMap {
+    pub x: Vec<f64>,
+    pub y: Vec<f64>,
+    pub z: Vec<Vec<f64>>,
 }
 
-impl GridElement for Plane {
+
+impl HeightMap {
+    pub fn height(&self, x: f64, y: f64) -> f64 {
+        // implement bilinear interpolation
+        0.0
+    }
+}
+
+
+pub struct Perlin {
+    pub size: [f64; 2],
+    pub subdivisions: u32,
+    pub heightmap: HeightMap, // 2D lookup table of z height vs x and y
+}
+
+impl GridElement for Perlin {
     fn interference(&self, point: Vector) -> Option<Interference> {
-        if point.z < 0. {
+
+        let ground_height = self.heightmap.height(point.x, point.y);
+
+        if point.z < ground_height {
             return Some(Interference {
-                magnitude: -point.z,
-                position: Vector::new(point.x, point.y, 0.),
-                normal: Vector::z(),
+                magnitude: ground_height - point.z,
+                position: Vector::new(point.x, point.y, ground_height),
+                normal: Vector::z(), // FIX THIS to real normal
             });
         } else {
             return None;
@@ -88,13 +107,13 @@ impl GridElement for Plane {
 fn create_plane_mesh(size: f32, subdivisions: i32) -> Mesh {
 
     //Ezra Code Start
-    use noise::{Fbm, Perlin};
+    use noise::{Fbm, Perlin as PerlinNoise}; // MAYBE FIX
     use noise::utils::{NoiseMapBuilder, PlaneMapBuilder};
     use std::io::{stdout, Write};
     use image::{GenericImageView, DynamicImage, Luma};
     //Ezra Code End    
 
-    let fbm = Fbm::<Perlin>::new(2348956);
+    let fbm = Fbm::<PerlinNoise>::new(2348956);
 
     PlaneMapBuilder::<_, 2>::new(&fbm)
         .set_size(130, 130)
