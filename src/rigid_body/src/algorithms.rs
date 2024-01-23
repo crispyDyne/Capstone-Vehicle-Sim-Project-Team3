@@ -62,8 +62,8 @@ pub fn loop_3_update(joint: &mut Joint, parent: &Joint) {
     joint.a = ap + (joint.qdd * joint.s);
 }
 
-pub fn integrate_joint_state(fixed_time: Res<FixedTime>, mut joint_query: Query<&mut Joint>) {
-    let dt = fixed_time.period.as_secs_f64();
+pub fn integrate_joint_state(fixed_time: Res<Time<Fixed>>, mut joint_query: Query<&mut Joint>) {
+    let dt = fixed_time.delta().as_secs_f64();
     for mut joint in joint_query.iter_mut() {
         joint.q += joint.qd * dt;
         joint.qd += joint.qdd * dt;
