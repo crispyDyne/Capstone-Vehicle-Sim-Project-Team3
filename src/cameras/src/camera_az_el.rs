@@ -72,7 +72,7 @@ pub fn az_el_camera(
     mut last_position: Local<Vec2>,
 ) {
     // get first cursor position
-    let current_position = if let Some(cursor) = cursor_moved.iter().next() {
+    let current_position = if let Some(cursor) = cursor_moved.read().next() {
         cursor.position
     } else {
         *last_position
@@ -100,7 +100,7 @@ pub fn az_el_camera(
         // Pan only if we're not rotating at the moment
         pan += delta * cursor_sensitivity;
     }
-    for ev in ev_scroll.iter() {
+    for ev in ev_scroll.read() {
         scroll += ev.y;
     }
 
