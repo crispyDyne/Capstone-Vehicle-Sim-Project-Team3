@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 # bevy
-bevy = {workspace = true, features=["jpeg"]}
+bevy = {workspace = true}
 bevy_obj = {workspace = true}
 
 rigid_body = {workspace = true}
@@ -16,6 +16,9 @@ cameras = {workspace = true}
 
 # physics
 grid_terrain = {workspace = true}
+
+# other
+rand = {workspace = true}
 
 [[example]]
 name = "car_json"

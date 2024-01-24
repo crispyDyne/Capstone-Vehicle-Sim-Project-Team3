@@ -24,6 +24,8 @@ cameras = {  path = "./cameras" }
 # physics
 grid_terrain = { path = "./grid_terrain" }
 
+# other
+rand = "0.8.4"
 
 itertools = "0.11.0"
 nalgebra = "0.32.2"
