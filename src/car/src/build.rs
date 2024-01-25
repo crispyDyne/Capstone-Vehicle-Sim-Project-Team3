@@ -39,6 +39,9 @@ const CHASSIS_MASS: f64 = 1000.;
 const SUSPENSION_MASS: f64 = 20.;
 const GRAVITY: f64 = 9.81;
 
+// List of cameras
+// let mut camera_list = Vec::new();
+
 /*
  * Defines a car's specifications to later be built by car_startup_system().
  * 
