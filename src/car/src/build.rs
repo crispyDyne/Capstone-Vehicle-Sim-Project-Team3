@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 use rand::Rng;
-//use bevy_ggrs::prelude::*;
-//use bevy_matchbox::prelude::PeerId;
 
 use cameras::control::CameraParentList;
 use rigid_body::{
@@ -25,16 +23,16 @@ pub struct CarDefinition {
     wheel: Wheel,
     drives: Vec<DriveType>,
     brake: Brake,
+    id: i32,
 }
 
 /*
- * struct PlayerList
- * Contains the list of players that are currently a part of this game session
+ * struct CarList
+ * Contains the list of car that are currently a part of this game session
  */
 #[derive(Resource)]
-pub struct PlayerList {
+pub struct CarList {
     pub cars: Vec<CarDefinition>,
-    pub playernames: Vec<String>,
 }
 
 const CHASSIS_MASS: f64 = 1000.;
@@ -47,7 +45,7 @@ const GRAVITY: f64 = 9.81;
  * Inputs: none
  * Outputs: CarDefinition - The struct containing the car's specifications
  */
-pub fn build_car(startposition: [f64; 3]) -> CarDefinition {
+pub fn build_car(startposition: [f64; 3], id: i32) -> CarDefinition {
     // Separate the start position into x, y, z coordinates
     let xpos = startposition[0];
     let ypos = startposition[1];
@@ -123,7 +121,7 @@ pub fn build_car(startposition: [f64; 3]) -> CarDefinition {
     // Wheel
     let wheel = build_wheel();
 
-    // // Drive and Brake
+    // Drive and Brake
     let drive_speeds = vec![0., 25., 50., 75.];
     let drive_torques = vec![1000., 1000., 600., 250.];
 
@@ -151,6 +149,7 @@ pub fn build_car(startposition: [f64; 3]) -> CarDefinition {
         wheel,
         drives,
         brake,
+        id,
     }
 }
 
@@ -178,13 +177,9 @@ pub fn build_wheel() -> Wheel {
     }
 }
 
-// Gregg: Edit this one, for loop it, and have it take in an array of car: ResMut<CarDefinition> passed in from main in car.rs
-pub fn car_startup_system(mut commands: Commands, players: ResMut<PlayerList>) {
-    println!("Starting up car for players:");
-    for player in &players.playernames {
-        println!("{}", player);
-    } 
+pub fn car_startup_system(mut commands: Commands, players: ResMut<CarList>) {
     for car in &players.cars {
+        println!("Starting up car with id: {}", car.id);
 
         let base = Joint::base(Motion::new([0., 0., 9.81], [0., 0., 0.]));
         let base_id = commands.spawn((base, Base)).id();
@@ -358,7 +353,7 @@ impl Suspension {
         // suspension mass
         let inertia = Inertia::new(
             self.mass,
-            Vector::new(0., 0., 0.),       // center of mass
+            Vector::new(0., 0., 0.), // center of mass
             self.moi * Matrix::identity(), // inertia
         );
 

@@ -1,14 +1,10 @@
-#![allow(unused_imports)]
-
 use bevy::prelude::*;
-use bevy_ggrs::*;
-use bevy_matchbox::prelude::*;
 
 // Some of the following code adapted from example code: https://github.com/johanhelsing/matchbox/tree/main/examples/bevy_ggrs
 
 use bevy_integrator::{SimTime, Solver};
 use car::{
-    build::{build_car, car_startup_system, CarDefinition, PlayerList},
+    build::{build_car, car_startup_system, CarList},
     environment::build_environment,
     setup::{camera_setup, simulation_setup},
 };
@@ -18,16 +14,11 @@ use rigid_body::plugin::RigidBodyPlugin;
 fn main() {
     // Create cars
     let mut car_definitions = Vec::new();
-    car_definitions.push(build_car([0., 0., 0.]));
-    car_definitions.push(build_car([0., 3., 0.]));
+    car_definitions.push(build_car([0., 0., 0.], 0));
+    car_definitions.push(build_car([0., 3., 0.], 1));
 
-    let mut player_names = Vec::new();
-    player_names.push("Player 1".to_string());
-    player_names.push("Player 2".to_string());
-
-    let players = PlayerList {
+    let players = CarList {
         cars: car_definitions,
-        playernames: player_names,
     };
 
     // Create App
