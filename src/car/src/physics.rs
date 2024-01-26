@@ -114,6 +114,8 @@ pub fn driven_wheel_system(
     control: Res<CarControl>,
 ) {
     for (mut joint, driven_wheel) in joints.iter_mut() {
+        //Join.qd = q dirivitive -> radians/second
+        //Can convert that by (joint.qd * wheel.radius) -> meters/second
         let power_limited_torque = (driven_wheel.max_power / joint.qd).abs();
         if joint.qd.abs() < driven_wheel.max_speed {
             joint.tau +=
