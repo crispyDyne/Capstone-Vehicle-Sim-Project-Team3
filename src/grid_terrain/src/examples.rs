@@ -180,6 +180,7 @@ pub fn perlin_plane(size: f64, subdivisions: f64) -> Vec<Vec<Box<dyn GridElement
 
     let x_factor = size / x_vertices;
     let z_factor = size / z_vertices;
+    let y_factor = size * 0.05;
 
     let mut xs: Vec<f64> = vec![];
     let mut zs: Vec<f64> = vec![];
@@ -192,7 +193,7 @@ pub fn perlin_plane(size: f64, subdivisions: f64) -> Vec<Vec<Box<dyn GridElement
 
         for z in 0..z_vertices as u32 {
             zs.push(z as f64 * z_factor);
-            temp.push(perlin_noise.get_value(x as usize, z as usize) - 0.5);
+            temp.push(perlin_noise.get_value(x as usize, z as usize) * y_factor);
         }
 
         ys.push(temp)
@@ -203,8 +204,8 @@ pub fn perlin_plane(size: f64, subdivisions: f64) -> Vec<Vec<Box<dyn GridElement
     let perlin_height_map = HeightMap {
         // Currently made to match order for perlin.rs
         // Don't know if correct or not
-        x: zs, 
-        y: xs, 
+        x: xs, 
+        y: zs, 
         z: ys,
     };
 
