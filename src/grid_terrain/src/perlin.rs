@@ -25,14 +25,12 @@ pub struct HeightMap {
     pub z: Vec<Vec<f64>>,
 }
 
-
 impl HeightMap {
     pub fn height(&self, x: f64, y: f64) -> f64 {
         // implement bilinear interpolation
         0.0
     }
 }
-
 
 pub struct Perlin {
     pub size: [f64; 2],
@@ -56,46 +54,98 @@ impl GridElement for Perlin {
         }
     }
 
-    fn mesh(&self) -> Mesh {
-        let y_vertex_count = self.subdivisions + 2;
-        let x_vertex_count = self.subdivisions + 2;
-        let num_vertices = (y_vertex_count * x_vertex_count) as usize;
-        let num_indices = ((y_vertex_count - 1) * (x_vertex_count - 1) * 6) as usize;
-        let up = Vec3::Z.to_array();
+    fn mesh(&self) -> Mesh {  
 
-        let mut positions: Vec<[f32; 3]> = Vec::with_capacity(num_vertices);
-        let mut normals: Vec<[f32; 3]> = Vec::with_capacity(num_vertices);
-        let mut uvs: Vec<[f32; 2]> = Vec::with_capacity(num_vertices);
-        let mut indices: Vec<u32> = Vec::with_capacity(num_indices);
+        let fbm = Fbm::<PerlinNoise>::new(2348956); // FIX hard coded seed
 
-        for y in 0..y_vertex_count {
-            for x in 0..x_vertex_count {
-                let tx = x as f32 / (x_vertex_count - 1) as f32;
-                let ty = y as f32 / (y_vertex_count - 1) as f32;
-                positions.push([tx * self.size[0] as f32, ty * self.size[1] as f32, 0.0]);
-                normals.push(up);
-                uvs.push([tx, 1.0 - ty]);
+        let perlin_noise = PlaneMapBuilder::<_, 2>::new(&fbm)
+            .set_size((self.subdivisions + 2) as usize, (self.subdivisions + 2) as usize)
+            .set_x_bounds(-1.0, 1.0)
+            .set_y_bounds(-1.0, 1.0)
+            .build();
+
+        let x_vertices = self.subdivisions + 2;
+        let z_vertices = self.subdivisions + 2;
+        let tot_vertices = (x_vertices * z_vertices) as usize;
+        let tot_indices = ((x_vertices - 1) * (z_vertices - 1) * 6) as usize;
+
+        let mut positions: Vec<[f32; 3]> = Vec::with_capacity(tot_vertices);
+        let mut normals: Vec<[f32; 3]> = Vec::with_capacity(tot_vertices);
+        let mut uvs: Vec<[f32; 2]> = Vec::with_capacity(tot_vertices);
+        let mut indices: Vec<u32> = Vec::with_capacity(tot_indices);
+
+
+        for x in 0..x_vertices {
+            for z in 0..z_vertices {
+
+                let xi = x as f64 / (x_vertices - 1) as f64;
+                let zi = z as f64 / (z_vertices - 1) as f64;
+                let yi = perlin_noise.get_value(x as usize, z as usize);
+
+                // Edge on origin
+                // new_x, new_z = [0, size]
+                let x_pos = xi * self.size[0];
+                let z_pos = zi * self.size[1];
+
+
+                // Centered around origin
+                // new_x, new_z = [- size/2, + size/2]
+                //let x_pos = (xi - 0.5) * self.size[0];
+                //let z_pos = (zi - 0.5) * self.size[1];
+                let y_pos = (yi - 0.5); // ???
+
+                // Build vertices/positions via set of squares
+                // zs and xs flipped to flip on screen since normals were facing down
+                positions.push([z_pos as f32, x_pos as f32, y_pos as f32]);
+
+                // Build normals
+                // Per vertex - Up vector
+                // FIX THIS -- should consider surrounding points to be a not up vector
+                normals.push([0.0, 0.0, 1.0]);
+
+                // Build uvs
+                // FIX THIS -- it is wrong maybe, but no textures are being used so should be fine
+                uvs.push([xi as f32, zi as f32]);
             }
         }
 
-        for y in 0..y_vertex_count - 1 {
-            for x in 0..x_vertex_count - 1 {
-                let quad = y * x_vertex_count + x;
-                indices.push(quad);
-                indices.push(quad + 1);
-                indices.push(quad + x_vertex_count);
-                indices.push(quad + x_vertex_count + 1);
-                indices.push(quad + x_vertex_count);
-                indices.push(quad + 1);
+        for x in 0..x_vertices-1 {
+            for z in 0..z_vertices-1 {
+
+                // build indices
+                let bl = (x * z_vertices) + z;
+                let tl = bl + 1;
+                let br = bl + z_vertices;
+                let tr = br + 1;
+                
+                // Triangle 1 xz 00-11-10
+                indices.push((bl) as u32);
+                indices.push((tr) as u32);
+                indices.push((br) as u32);
+
+                // Triangle 2 xz 00-01-11
+                indices.push((bl) as u32);
+                indices.push((tl) as u32);
+                indices.push((tr) as u32);
             }
         }
+            
+        let mut plane_mesh = Mesh::new(PrimitiveTopology::TriangleList);
+        plane_mesh.set_indices(Some(Indices::U32(indices)));
 
-        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-        mesh.set_indices(Some(Indices::U32(indices)));
-        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
-        mesh
+        plane_mesh.insert_attribute(
+            Mesh::ATTRIBUTE_POSITION, 
+            positions);
+
+        plane_mesh.insert_attribute(
+            Mesh::ATTRIBUTE_NORMAL, 
+            normals);
+
+        plane_mesh.insert_attribute(
+            Mesh::ATTRIBUTE_UV_0, 
+            uvs);
+
+        plane_mesh
     }
 }
 
@@ -105,13 +155,6 @@ impl GridElement for Perlin {
 
 
 fn create_plane_mesh(size: f32, subdivisions: i32) -> Mesh {
-
-    //Ezra Code Start
-    use noise::{Fbm, Perlin as PerlinNoise}; // MAYBE FIX
-    use noise::utils::{NoiseMapBuilder, PlaneMapBuilder};
-    use std::io::{stdout, Write};
-    use image::{GenericImageView, DynamicImage, Luma};
-    //Ezra Code End    
 
     let fbm = Fbm::<PerlinNoise>::new(2348956);
 
