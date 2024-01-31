@@ -109,6 +109,7 @@ impl DrivenWheel {
     }
 }
 
+// Note to self: Wheel speed use is here
 pub fn driven_wheel_system(
     mut joints: Query<(&mut Joint, &DrivenWheel)>,
     control: Res<CarControl>,

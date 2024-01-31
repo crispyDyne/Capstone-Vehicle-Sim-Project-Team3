@@ -1,10 +1,22 @@
 use bevy::prelude::*;
 
-#[derive(Resource, Default)]
+// Note to self: Change CarControl to be a component. (was a Resource)
+#[derive(Component)]
+#[component(storage = "SparseSet")]
 pub struct CarControl {
     pub throttle: f32,
     pub steering: f32,
     pub brake: f32,
+}
+
+impl CarControl {
+    pub fn new(throttle: f32, steering: f32, brake: f32) -> Self {
+        Self {
+            throttle,
+            steering,
+            brake,
+        }
+    }
 }
 
 pub fn user_control_system(
@@ -12,7 +24,7 @@ pub fn user_control_system(
     gamepads: Res<Gamepads>,
     button_axes: Res<Axis<GamepadButton>>,
     axes: Res<Axis<GamepadAxis>>,
-    mut control: ResMut<CarControl>,
+    mut control: CarControl, // Note to self: Change to query (Query<CarControl>)
 ) {
     // gamepad controls
     for gamepad in gamepads.iter() {

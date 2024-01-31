@@ -27,7 +27,7 @@ grid_terrain = { path = "./grid_terrain" }
 # other
 rand = "0.8.4"
 
-itertools = "0.11.0"
+itertools = "0.12.1"
 nalgebra = "0.32.2"
 
 # Enable only a small amount of optimization in debug mode

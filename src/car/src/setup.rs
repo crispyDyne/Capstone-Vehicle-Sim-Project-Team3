@@ -12,7 +12,7 @@ use crate::{
     tire::point_tire_system,
 };
 
-use super::control::CarControl;
+//use super::control::CarControl;
 use cameras::{
     camera_az_el::{self, camera_builder},
     control::camera_parent_system,
@@ -34,7 +34,7 @@ pub fn simulation_setup(app: &mut App) {
             .in_set(PhysicsSet::Evaluate),
     )
     .add_systems(Update, (user_control_system,))
-    .init_resource::<CarControl>();
+    //.init_resource::<CarControl>(); // Note to self: get rid of this!
 }
 
 pub fn camera_setup(app: &mut App) {
