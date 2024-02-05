@@ -50,7 +50,7 @@ impl Steering {
     }
 }
 
-pub fn steering_system(mut joints: Query<(&mut Joint, &Steering)>, control: Res<CarControl>) {
+pub fn steering_system(mut joints: Query<(&mut Joint, &Steering)>, control: CarControl) {
     for (mut joint, steering) in joints.iter_mut() {
         joint.q = control.steering as f64 * steering.max_angle;
     }
@@ -75,7 +75,7 @@ impl SteeringCurvature {
 
 pub fn steering_curvature_system(
     mut joints: Query<(&mut Joint, &SteeringCurvature)>,
-    control: Res<CarControl>,
+    control: CarControl,
 ) {
     for (mut joint, steering) in joints.iter_mut() {
         let vehicle_curvature_target = steering.max_curvature * control.steering as f64;
@@ -112,7 +112,7 @@ impl DrivenWheel {
 // Note to self: Wheel speed use is here
 pub fn driven_wheel_system(
     mut joints: Query<(&mut Joint, &DrivenWheel)>,
-    control: Res<CarControl>,
+    control: CarControl,
 ) {
     for (mut joint, driven_wheel) in joints.iter_mut() {
         let power_limited_torque = (driven_wheel.max_power / joint.qd).abs();
@@ -166,7 +166,7 @@ impl DrivenWheelLookup {
 
 pub fn driven_wheel_lookup_system(
     mut joints: Query<(&mut Joint, &mut DrivenWheelLookup)>,
-    control: Res<CarControl>,
+    control: CarControl,
 ) {
     for (mut joint, mut driven_wheel) in joints.iter_mut() {
         let torque_limit = driven_wheel.limit_torque(joint.qd).abs();
@@ -192,7 +192,7 @@ impl BrakeWheel {
     }
 }
 
-pub fn brake_wheel_system(mut joints: Query<(&mut Joint, &BrakeWheel)>, control: Res<CarControl>) {
+pub fn brake_wheel_system(mut joints: Query<(&mut Joint, &BrakeWheel)>, control: CarControl) {
     for (mut joint, brake_wheel) in joints.iter_mut() {
         // TODO: make better? What to do around zero speed?
         joint.tau += -control.brake as f64 * brake_wheel.max_torque * joint.qd.min(1.).max(-1.);

@@ -12,7 +12,7 @@ use crate::{
     tire::point_tire_system,
 };
 
-//use super::control::CarControl;
+use super::build::CarList;
 use cameras::{
     camera_az_el::{self, camera_builder},
     control::camera_parent_system,
@@ -25,7 +25,7 @@ pub fn simulation_setup(app: &mut App) {
     )
     .add_systems(
         PhysicsSchedule,
-        (
+        ( // Note to self: Will probably have to initialize a unique instance of each of these for each car entity
             suspension_system,
             point_tire_system,
             driven_wheel_lookup_system,
@@ -34,7 +34,7 @@ pub fn simulation_setup(app: &mut App) {
             .in_set(PhysicsSet::Evaluate),
     )
     .add_systems(Update, (user_control_system,))
-    //.init_resource::<CarControl>(); // Note to self: get rid of this!
+    .init_resource::<CarList>();
 }
 
 pub fn camera_setup(app: &mut App) {

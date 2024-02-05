@@ -9,10 +9,12 @@ use rigid_body::{
 };
 
 use crate::{
-    control::CarControl, physics::{
+    control::CarControl, 
+    physics::{
         BrakeWheel, DriveType, DrivenWheelLookup, SteeringCurvature, SteeringType,
         SuspensionComponent,
-    }, tire::PointTire
+    }, 
+    tire::PointTire
 };
 
 #[derive(Resource)]
@@ -22,7 +24,7 @@ pub struct CarDefinition {
     wheel: Wheel,
     drives: Vec<DriveType>,
     brake: Brake,
-    carcontrol: CarControl,
+    pub carcontrol: CarControl,
     id: i32,
 } // Try to add camera and wheels to this later
 
@@ -30,7 +32,7 @@ pub struct CarDefinition {
  * struct CarList
  * Contains the list of car that are currently a part of this game session
  */
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct CarList {
     pub cars: Vec<CarDefinition>,
 }
@@ -147,8 +149,10 @@ pub fn build_car(startposition: [f64; 3], id: i32) -> CarDefinition {
     };
 
     let carcontrol = CarControl {
-        
-    }
+        throttle: 0.,
+        steering: 0.,
+        brake: 0.,
+    };
 
     CarDefinition {
         chassis,
@@ -156,7 +160,7 @@ pub fn build_car(startposition: [f64; 3], id: i32) -> CarDefinition {
         wheel,
         drives,
         brake,
-        carcontrol
+        carcontrol,
         id,
     }
 }
