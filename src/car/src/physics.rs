@@ -6,6 +6,7 @@ use rigid_body::joint::Joint;
 
 use crate::interpolate::Interpolator1D;
 
+use super::build::CarList;
 use super::control::CarControl;
 
 #[derive(Component)]
@@ -50,9 +51,14 @@ impl Steering {
     }
 }
 
-pub fn steering_system(mut joints: Query<(&mut Joint, &Steering)>, control: CarControl) {
-    for (mut joint, steering) in joints.iter_mut() {
-        joint.q = control.steering as f64 * steering.max_angle;
+pub fn steering_system(mut joints: Query<(&mut Joint, &Steering)>, mut players: ResMut<CarList>) {
+    for car in &mut players.cars {
+
+        let control = &mut car.carcontrol;
+    
+        for (mut joint, steering) in joints.iter_mut() {
+            joint.q = control.steering as f64 * steering.max_angle;
+        }
     }
 }
 
@@ -75,13 +81,19 @@ impl SteeringCurvature {
 
 pub fn steering_curvature_system(
     mut joints: Query<(&mut Joint, &SteeringCurvature)>,
-    control: CarControl,
+    mut players: ResMut<CarList>,
 ) {
-    for (mut joint, steering) in joints.iter_mut() {
-        let vehicle_curvature_target = steering.max_curvature * control.steering as f64;
-        let wheel_curvature_target =
-            vehicle_curvature_target / (1.0 - vehicle_curvature_target * steering.y);
-        joint.q = (wheel_curvature_target * steering.x).atan();
+    // Iterate once for each car
+    for car in &mut players.cars {
+
+        let control = &mut car.carcontrol;
+
+        for (mut joint, steering) in joints.iter_mut() {
+            let vehicle_curvature_target = steering.max_curvature * control.steering as f64;
+            let wheel_curvature_target =
+                vehicle_curvature_target / (1.0 - vehicle_curvature_target * steering.y);
+            joint.q = (wheel_curvature_target * steering.x).atan();
+        }
     }
 }
 
@@ -166,18 +178,24 @@ impl DrivenWheelLookup {
 
 pub fn driven_wheel_lookup_system(
     mut joints: Query<(&mut Joint, &mut DrivenWheelLookup)>,
-    control: CarControl,
+    mut players: ResMut<CarList>,
 ) {
-    for (mut joint, mut driven_wheel) in joints.iter_mut() {
-        let torque_limit = driven_wheel.limit_torque(joint.qd).abs();
-        let commanded_torque = control.throttle as f64 * torque_limit;
-        joint.tau += commanded_torque;
-        driven_wheel
-            .outputs
-            .insert("torque".to_string(), commanded_torque);
-        driven_wheel
-            .outputs
-            .insert("torque_limit".to_string(), torque_limit);
+    // Iterate once for each car
+    for car in &mut players.cars {
+
+        let control = &mut car.carcontrol;
+
+        for (mut joint, mut driven_wheel) in joints.iter_mut() {
+            let torque_limit = driven_wheel.limit_torque(joint.qd).abs();
+            let commanded_torque = control.throttle as f64 * torque_limit;
+            joint.tau += commanded_torque;
+            driven_wheel
+                .outputs
+                .insert("torque".to_string(), commanded_torque);
+            driven_wheel
+                .outputs
+                .insert("torque_limit".to_string(), torque_limit);
+        }
     }
 }
 
@@ -192,9 +210,14 @@ impl BrakeWheel {
     }
 }
 
-pub fn brake_wheel_system(mut joints: Query<(&mut Joint, &BrakeWheel)>, control: CarControl) {
-    for (mut joint, brake_wheel) in joints.iter_mut() {
-        // TODO: make better? What to do around zero speed?
-        joint.tau += -control.brake as f64 * brake_wheel.max_torque * joint.qd.min(1.).max(-1.);
+pub fn brake_wheel_system(mut joints: Query<(&mut Joint, &BrakeWheel)>, mut players: ResMut<CarList>) {
+    for car in &mut players.cars {
+
+        let control = &mut car.carcontrol;
+
+        for (mut joint, brake_wheel) in joints.iter_mut() {
+            // TODO: make better? What to do around zero speed?
+            joint.tau += -control.brake as f64 * brake_wheel.max_torque * joint.qd.min(1.).max(-1.);
+        }
     }
 }

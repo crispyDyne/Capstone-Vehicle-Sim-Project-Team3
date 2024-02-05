@@ -11,27 +11,17 @@ pub struct CarControl {
     pub brake: f32,
 }
 
-impl CarControl {
-    pub fn new(throttle: f32, steering: f32, brake: f32) -> Self {
-        Self {
-            throttle,
-            steering,
-            brake,
-        }
-    }
-}
-
 pub fn user_control_system(
     keyboard_input: Res<Input<KeyCode>>,
     gamepads: Res<Gamepads>,
     button_axes: Res<Axis<GamepadButton>>,
     axes: Res<Axis<GamepadAxis>>,
-    mut players: ResMut<CarList>, // Note to self: Change to query (Query<CarControl>)
+    mut players: ResMut<CarList>,
 ) {
     // Iterate once for each car
-    for car in &players.cars {
+    for car in &mut players.cars {
 
-        let mut control = car.carcontrol;
+        let control = &mut car.carcontrol;
 
         // gamepad controls
         for gamepad in gamepads.iter() {

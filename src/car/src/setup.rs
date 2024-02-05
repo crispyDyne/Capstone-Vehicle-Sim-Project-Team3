@@ -25,7 +25,7 @@ pub fn simulation_setup(app: &mut App) {
     )
     .add_systems(
         PhysicsSchedule,
-        ( // Note to self: Will probably have to initialize a unique instance of each of these for each car entity
+        (
             suspension_system,
             point_tire_system,
             driven_wheel_lookup_system,
