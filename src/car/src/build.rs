@@ -189,8 +189,8 @@ pub fn build_wheel() -> Wheel {
     }
 }
 
-pub fn car_startup_system(mut commands: Commands, players: ResMut<CarList>) {
-    for car in &players.cars {
+pub fn car_startup_system(mut commands: Commands, mut players: ResMut<CarList>) {
+    for car in &mut players.cars {
         println!("Starting up car with id: {}", car.id);
 
         let base = Joint::base(Motion::new([0., 0., 9.81], [0., 0., 0.]));
