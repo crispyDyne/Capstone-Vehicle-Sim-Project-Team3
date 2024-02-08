@@ -1261,9 +1261,6 @@ dependencies = [
  "bevy_obj",
  "cameras",
  "grid_terrain",
- "image 0.23.14",
- "noise",
- "rand 0.8.5",
  "rigid_body",
 ]
 
@@ -2073,7 +2070,7 @@ dependencies = [
  "byteorder",
  "color_quant",
  "gif",
- "jpeg-decoder",
+ "jpeg-decoder 0.1.22",
  "num-iter",
  "num-rational 0.3.2",
  "num-traits",
@@ -2091,9 +2088,8 @@ dependencies = [
  "bytemuck",
  "byteorder",
  "color_quant",
+ "jpeg-decoder 0.3.1",
  "num-rational 0.4.1",
- "jpeg-decoder",
- "num-rational",
  "num-traits",
  "png 0.17.10",
 ]
@@ -2204,6 +2200,11 @@ dependencies = [
  "rayon",
 ]
 
+[[package]]
+name = "jpeg-decoder"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f5d4a7da358eff58addd2877a45865158f0d78c911d43a5784ceb7bbf52833b0"
 
 [[package]]
 name = "js-sys"
@@ -3515,7 +3516,7 @@ version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a53f4706d65497df0c4349241deddf35f84cee19c87ed86ea8ca590f4464437"
 dependencies = [
- "jpeg-decoder",
+ "jpeg-decoder 0.1.22",
  "miniz_oxide 0.4.4",
  "weezl",
 ]
