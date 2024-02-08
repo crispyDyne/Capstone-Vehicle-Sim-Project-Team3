@@ -155,6 +155,7 @@ pub fn build_wheel() -> Wheel {
 }
 
 pub fn car_startup_system(mut commands: Commands, asset_server: Res<AssetServer>, car: ResMut<CarDefinition>) {
+    //Motion here is for gravity   (9.81 m/s)  
     let base = Joint::base(Motion::new([0., 0., 9.81], [0., 0., 0.]));
     let base_id = commands.spawn((base, Base)).id();
 
