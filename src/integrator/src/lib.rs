@@ -143,9 +143,9 @@ pub fn integrator_schedule<T: Stateful>(world: &mut World) {
 
     // get step size
     let time_step = world
-        .get_resource::<FixedTime>()
+        .get_resource::<Time<Fixed>>()
         .unwrap()
-        .period
+        .delta()
         .as_secs_f64();
 
     // get time and increment

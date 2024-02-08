@@ -24,10 +24,10 @@ pub struct RigidBodyPlugin {
 impl RigidBodyPlugin {
     pub fn setup_physics_simulation(&self, app: &mut App) {
         let schedule = create_physics_schedule();
-        app.add_schedule(PhysicsSchedule, schedule)
+        app.add_schedule(schedule)
             .insert_resource(self.time.clone())
             .insert_resource(self.solver)
-            .insert_resource(FixedTime::new_from_secs(self.time.dt as f32))
+            .insert_resource(Time::<Fixed>::from_seconds(self.time.dt as f64))
             .add_systems(FixedUpdate, integrator_schedule::<Joint>);
     }
 }
@@ -69,7 +69,7 @@ impl Plugin for RigidBodyPlugin {
 }
 
 fn create_physics_schedule() -> Schedule {
-    let mut physics_schedule = Schedule::new();
+    let mut physics_schedule = Schedule::new(PhysicsSchedule);
     physics_schedule
         .add_physics_systems::<Joint, _, _>((loop_1,), (apply_external_forces, loop_23).chain());
 
