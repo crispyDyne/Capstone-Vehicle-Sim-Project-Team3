@@ -1,13 +1,6 @@
-use bevy::{
-    prelude::{Mesh, Vec3},
-    render::{mesh::Indices, render_resource::PrimitiveTopology},
-};
-use rigid_body::sva::Vector;
-
-
-
-//use bevy::render::mesh::Indices;
-//use bevy::render::render_resource::PrimitiveTopology;
+use bevy::prelude::*;
+use bevy::render::mesh::Indices;
+use bevy::render::render_resource::PrimitiveTopology;
 
 //Ezra Code Start
 use noise::{Fbm, Perlin};
@@ -16,94 +9,75 @@ use std::io::{stdout, Write};
 use image::{GenericImageView, DynamicImage, Luma};
 //Ezra Code End
 
+fn main() 
+{
+    //Ezra Code Start
+    // Print to terminal
+    let mut lock = stdout().lock();
+    writeln!(lock, "hello world").unwrap();
+    
+    // Generate height map
+    let fbm = Fbm::<Perlin>::new(2348956);
+    /*
+    PlaneMapBuilder::<_, 2>::new(&fbm)
+    .set_size(100, 100)
+    .set_x_bounds(-10000.0, 10000.0)
+    .set_y_bounds(-10000.0, 10000.0)
+    .build()
+    .write_to_file("fbm.png");
+    */
+    PlaneMapBuilder::<_, 2>::new(&fbm)
+            .set_size(130, 130)
+            .set_x_bounds(-1.0, 1.0)
+            .set_y_bounds(-1.0, 1.0)
+            .build()
+            .write_to_file("fbm.png");
 
-use crate::{GridElement, Interference};
+    //Ezra Code End
 
-pub struct Plane {
-    pub size: [f64; 2],
-    pub subdivisions: u32,
-}
-
-impl GridElement for Plane {
-    fn interference(&self, point: Vector) -> Option<Interference> {
-        if point.z < 0. {
-            return Some(Interference {
-                magnitude: -point.z,
-                position: Vector::new(point.x, point.y, 0.),
-                normal: Vector::z(),
-            });
-        } else {
-            return None;
-        }
-    }
-
-    fn mesh(&self) -> Mesh {
-        let y_vertex_count = self.subdivisions + 2;
-        let x_vertex_count = self.subdivisions + 2;
-        let num_vertices = (y_vertex_count * x_vertex_count) as usize;
-        let num_indices = ((y_vertex_count - 1) * (x_vertex_count - 1) * 6) as usize;
-        let up = Vec3::Z.to_array();
-
-        let mut positions: Vec<[f32; 3]> = Vec::with_capacity(num_vertices);
-        let mut normals: Vec<[f32; 3]> = Vec::with_capacity(num_vertices);
-        let mut uvs: Vec<[f32; 2]> = Vec::with_capacity(num_vertices);
-        let mut indices: Vec<u32> = Vec::with_capacity(num_indices);
-
-        for y in 0..y_vertex_count {
-            for x in 0..x_vertex_count {
-                let tx = x as f32 / (x_vertex_count - 1) as f32;
-                let ty = y as f32 / (y_vertex_count - 1) as f32;
-                positions.push([tx * self.size[0] as f32, ty * self.size[1] as f32, 0.0]);
-                normals.push(up);
-                uvs.push([tx, 1.0 - ty]);
-            }
-        }
-
-        for y in 0..y_vertex_count - 1 {
-            for x in 0..x_vertex_count - 1 {
-                let quad = y * x_vertex_count + x;
-                indices.push(quad);
-                indices.push(quad + 1);
-                indices.push(quad + x_vertex_count);
-                indices.push(quad + x_vertex_count + 1);
-                indices.push(quad + x_vertex_count);
-                indices.push(quad + 1);
-            }
-        }
-
-        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-        mesh.set_indices(Some(Indices::U32(indices)));
-        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
-        mesh
-    }
+    App::new()
+        .add_plugins(DefaultPlugins)
+        .add_systems(Startup, setup)
+        .run();
 }
 
 
 
+fn setup(
+    mut commands: Commands,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut meshes: ResMut<Assets<Mesh>>,) 
+    
+    {
+    let red_material_handle = materials.add(StandardMaterial {
+        base_color: Color::rgba(1.0, 0.0, 0.0, 0.5),
+        alpha_mode: AlphaMode::Blend,
+        unlit: true,
+        ..default()
+    });
 
+    let plane_size = 4.0;
+    let subdivisions = 128;
 
+    let plane_mesh_handle: Handle<Mesh> = meshes.add(create_plane_mesh(plane_size, subdivisions));
+
+    commands.spawn((
+        PbrBundle {
+            mesh: plane_mesh_handle,
+            material: red_material_handle,
+            //transform: Transform::from_xyz(-plane_size/2.0, 0.0, 0.0),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            ..default()
+        },
+    ));
+
+    commands.spawn(Camera3dBundle {
+        transform: Transform::from_xyz(0.1, 2.0, -5.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ..default()
+    });
+}
 
 fn create_plane_mesh(size: f32, subdivisions: i32) -> Mesh {
-
-    //Ezra Code Start
-    use noise::{Fbm, Perlin};
-    use noise::utils::{NoiseMapBuilder, PlaneMapBuilder};
-    use std::io::{stdout, Write};
-    use image::{GenericImageView, DynamicImage, Luma};
-    //Ezra Code End    
-
-    let fbm = Fbm::<Perlin>::new(2348956);
-
-    PlaneMapBuilder::<_, 2>::new(&fbm)
-        .set_size(130, 130)
-        .set_x_bounds(-1.0, 1.0)
-        .set_y_bounds(-1.0, 1.0)
-        .build()
-        .write_to_file("fbm.png");
-
-
 
     let x_vertices = subdivisions + 2;
     let z_vertices = subdivisions + 2;
@@ -166,7 +140,7 @@ fn create_plane_mesh(size: f32, subdivisions: i32) -> Mesh {
 
             // build vertices/positions via set of squares
             // positions.push([xi * size, 0.0, zi * size]);
-            positions.push([z_pos, x_pos, y_pos]);
+            positions.push([x_pos, y_pos, z_pos]);
 
             // build normals
             /*
@@ -177,7 +151,7 @@ fn create_plane_mesh(size: f32, subdivisions: i32) -> Mesh {
 
             // Per vertex
             // Up vector
-            normals.push([0.0, 0.0, 1.0]);
+            normals.push([0.0, 1.0, 0.0]);
 
             // build uvs
             uvs.push([xi, zi]);
