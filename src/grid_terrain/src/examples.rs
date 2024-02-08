@@ -189,13 +189,17 @@ pub fn perlin_plane(size: f64, subdivisions: f64) -> Vec<Vec<Box<dyn GridElement
 
     for x in 0..x_vertices as u32 {
         xs.push(x as f64 * x_factor);
-        let mut temp: Vec<f64> = vec![];
+    }
 
+    for z in 0..z_vertices as u32 {
+        zs.push(z as f64 * z_factor);
+    }
+
+    for x in 0..x_vertices as u32 {
+        let mut temp: Vec<f64> = vec![];
         for z in 0..z_vertices as u32 {
-            zs.push(z as f64 * z_factor);
             temp.push(perlin_noise.get_value(x as usize, z as usize) * y_factor);
         }
-
         ys.push(temp)
     }
 

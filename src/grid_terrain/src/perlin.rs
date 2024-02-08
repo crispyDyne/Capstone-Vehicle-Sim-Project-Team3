@@ -4,19 +4,13 @@ use bevy::{
 };
 use rigid_body::sva::Vector;
 
-
-
 //use bevy::render::mesh::Indices;
 //use bevy::render::render_resource::PrimitiveTopology;
 
-//Ezra Code Start
 use noise::{Fbm, Perlin as PerlinNoise};
 use noise::utils::{NoiseMapBuilder, PlaneMapBuilder};
 use std::io::{stdout, Write};
 use image::{GenericImageView, DynamicImage, Luma};
-//Ezra Code End
-
-
 use crate::{GridElement, Interference};
 
 pub struct HeightMap {
@@ -27,9 +21,7 @@ pub struct HeightMap {
 
 impl HeightMap {
     pub fn height(&self, x: f64, y: f64) -> Option<f64> {
-
         // Bilinear interpolation
-
         let find_x = find(&(self.x), x);
         let find_y = find(&(self.y), y);
 
@@ -39,31 +31,35 @@ impl HeightMap {
         match find_x {
             Some(x) => x_ind = x,
             None => {
-                return None
-            },
+                return None;
+            }
         }
+
         match find_y {
             Some(y) => y_ind = y,
             None => {
-                return None
-            },
+                return None;
+            }
         }
 
-        // Section copied from Chris who copied from ChatGPT
+        // Adjust indices to match the original array
+        let x_ind_next = x_ind + 1;
+        let y_ind_next = y_ind + 1;
+
         let q11 = self.z[x_ind][y_ind];
-        let q12 = self.z[x_ind][y_ind + 1];
-        let q21 = self.z[x_ind + 1][y_ind];
-        let q22 = self.z[x_ind + 1][y_ind + 1];
+        let q12 = self.z[x_ind][y_ind_next];
+        let q21 = self.z[x_ind_next][y_ind];
+        let q22 = self.z[x_ind_next][y_ind_next];
 
         let x1 = self.x[x_ind];
-        let x2 = self.x[x_ind + 1];
+        let x2 = self.x[x_ind_next];
         let y1 = self.y[y_ind];
-        let y2 = self.y[y_ind + 1];
+        let y2 = self.y[y_ind_next];
 
         let r1 = ((x2 - x) / (x2 - x1)) * q11 + ((x - x1) / (x2 - x1)) * q21;
         let r2 = ((x2 - x) / (x2 - x1)) * q12 + ((x - x1) / (x2 - x1)) * q22;
 
-        return Some(((y2 - y) / (y2 - y1)) * r1 + ((y - y1) / (y2 - y1)) * r2);
+        Some(((y2 - y) / (y2 - y1)) * r1 + ((y - y1) / (y2 - y1)) * r2)
     }
 }
 
@@ -75,52 +71,31 @@ fn find(array: &[f64], target: f64) -> Option<usize> {
     // -- for number that is floored (rounded down)
     // ex 8.8 -> 8
 
-    // BROKEN FIX THIS
+    let mut low = 0;
+    let mut high = array.len() - 1;
+    
+    while low < high 
+    {
+        let mid = (low + high) / 2;
 
-
-    // let mut low: usize = 0;
-    // let mut high: usize = 128;//array.len() - 1 - 1;
-
-    // if target < array[low] {
-    //     return None;
-    // }
-    // if target > array[high] {
-    //     return None;
-    // }
-
-    // while low != high {
-    //     let mid = (low + high) / 2 as usize;
-    //     if mid == low {
-    //         if array[high] > target {
-    //             return Some(low);
-    //         }
-    //         else {
-    //             return Some(high);
-    //         }
-    //     }
-    //     else if array[mid] <= target {
-    //         high = mid;
-    //     }
-    //     else {
-    //         low = mid;
-    //     }
-    // }
-    // return Some(low);
-
-
-    // O(n) dumb search
-
-    let mut temp: usize = 0;
-    for &num in array {
-        if num < target {
-            temp += 1;
+        if mid == low && array[mid] < target 
+        {
+            return Some(mid);
         }
-        if num > target {
-            return Some(temp - 1);
+        else if mid == low && array[mid] >= target
+        {
+            return Some(high);
+        }
+        else if array[mid] < target 
+        {
+            low = mid;
+        } 
+        else 
+        {
+            high = mid;
         }
     }
     return None;
-
 }
 
 
