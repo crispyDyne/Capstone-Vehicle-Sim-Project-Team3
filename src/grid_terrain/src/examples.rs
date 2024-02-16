@@ -167,7 +167,7 @@ pub fn perlin_plane(size: f64, subdivisions: f64) -> Vec<Vec<Box<dyn GridElement
     let mut grid_elements: Vec<Vec<Box<dyn GridElement + 'static>>> = Vec::new();
     
     
-    let fbm = Fbm::<PerlinNoise>::new(2348956); // FIX hard coded seed
+    let fbm = Fbm::<PerlinNoise>::new(2348961); // FIX hard coded seed
 
     let perlin_noise = PlaneMapBuilder::<_, 2>::new(&fbm)
         .set_size((subdivisions + 2.0) as usize, (subdivisions + 2.0) as usize)
@@ -176,48 +176,44 @@ pub fn perlin_plane(size: f64, subdivisions: f64) -> Vec<Vec<Box<dyn GridElement
         .build();
 
     let x_vertices = subdivisions + 2.0;
-    let z_vertices = subdivisions + 2.0;
+    let y_vertices = subdivisions + 2.0;
 
     let x_factor = size / x_vertices;
-    let z_factor = size / z_vertices;
-    let y_factor = size * 0.05;
+    let y_factor = size / y_vertices;
+    let z_factor = size * 0.05;
 
     let mut xs: Vec<f64> = vec![];
-    let mut zs: Vec<f64> = vec![];
-    let mut ys: Vec<Vec<f64>> = vec![];
+    let mut ys: Vec<f64> = vec![];
+    let mut zs: Vec<Vec<f64>> = vec![];
 
 
     for x in 0..x_vertices as u32 {
         xs.push(x as f64 * x_factor);
     }
 
-    for z in 0..z_vertices as u32 {
-        zs.push(z as f64 * z_factor);
+    for y in 0..y_vertices as u32 {
+        ys.push(y as f64 * y_factor);
     }
 
     for x in 0..x_vertices as u32 {
         let mut temp: Vec<f64> = vec![];
-        for z in 0..z_vertices as u32 {
-            temp.push(perlin_noise.get_value(x as usize, z as usize) * y_factor);
+        for y in 0..y_vertices as u32 {
+            temp.push(perlin_noise.get_value(x as usize, y as usize) * z_factor);
         }
-        ys.push(temp)
+        zs.push(temp)
     }
 
-
-    // FIX THIS
     let perlin_height_map = HeightMap {
-        // Currently made to match order for perlin.rs
-        // Don't know if correct or not
         x: xs, 
-        y: zs, 
-        z: ys,
+        y: ys, 
+        z: zs,
     };
 
     grid_elements.push(vec![
         Box::new(Perlin {
             size: [size, size],
             subdivisions: subdivisions as u32,
-            heightmap: perlin_height_map, // FIX THIS
+            heightmap: perlin_height_map,
         }),
 
     ]);
