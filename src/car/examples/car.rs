@@ -15,7 +15,7 @@ fn main() {
     // Create cars
     let mut car_definitions = Vec::new();
     car_definitions.push(build_car([0., 0., 0.], 0));
-    car_definitions.push(build_car([0., 3., 0.], 1));
+    car_definitions.push(build_car([0., 2., 0.], 1));
 
     let players = CarList {
         cars: car_definitions,

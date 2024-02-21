@@ -20,6 +20,7 @@ pub enum JointType {
 #[derive(Component, Default, Debug)]
 pub struct Base;
 
+// Note to self: Trying making a unique Joint object for each car
 #[derive(Component, Default, Debug)]
 pub struct Joint {
     pub joint_type: JointType,
