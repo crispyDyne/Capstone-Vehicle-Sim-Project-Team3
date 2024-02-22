@@ -1,8 +1,6 @@
 use bevy::prelude::*;
 
 use crate::build::CarList;
-
-// Note to self: Change CarControl to be a component. (was a Resource)
 #[derive(Component)]
 #[component(storage = "SparseSet")]
 pub struct CarControl {
@@ -22,6 +20,7 @@ pub fn user_control_system(
     for car in &mut players.cars {
 
         let control = &mut car.carcontrol;
+        let id = &mut car.id;
 
         // gamepad controls
         for gamepad in gamepads.iter() {
@@ -72,6 +71,7 @@ pub fn user_control_system(
         // between -1 and 1 for steering.
         let response_time = 0.25;
         let time_constant = 1. / (response_time * 60.);
+        //if (id == 0) {
         if keyboard_input.pressed(KeyCode::W) {
             control.throttle += time_constant;
             control.throttle = control.throttle.min(1.0);

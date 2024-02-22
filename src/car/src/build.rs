@@ -25,7 +25,8 @@ pub struct CarDefinition {
     drives: Vec<DriveType>,
     brake: Brake,
     pub carcontrol: CarControl,
-    id: i32,
+    //pub joint: Joint,
+    pub id: i32,
 } // Try to add camera and wheels to this later
 
 /*
