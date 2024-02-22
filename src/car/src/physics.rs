@@ -4,6 +4,8 @@ use bevy::prelude::*;
 
 use rigid_body::joint::Joint;
 
+use crate::build::Control;
+use crate::control;
 use crate::interpolate::Interpolator1D;
 
 use super::build::CarList;
@@ -53,9 +55,8 @@ impl Steering {
 
 pub fn steering_system(mut joints: Query<(&mut Joint, &Steering)>, mut players: ResMut<CarList>) {
     for car in &mut players.cars {
-
         let control = &mut car.carcontrol;
-    
+
         for (mut joint, steering) in joints.iter_mut() {
             joint.q = control.steering as f64 * steering.max_angle;
         }
@@ -85,7 +86,6 @@ pub fn steering_curvature_system(
 ) {
     // Iterate once for each car
     for car in &mut players.cars {
-
         let control = &mut car.carcontrol;
 
         for (mut joint, steering) in joints.iter_mut() {
@@ -122,10 +122,7 @@ impl DrivenWheel {
 }
 
 // Note to self: Wheel speed use is here
-pub fn driven_wheel_system(
-    mut joints: Query<(&mut Joint, &DrivenWheel)>,
-    control: CarControl,
-) {
+pub fn driven_wheel_system(mut joints: Query<(&mut Joint, &DrivenWheel)>, control: CarControl) {
     for (mut joint, driven_wheel) in joints.iter_mut() {
         let power_limited_torque = (driven_wheel.max_power / joint.qd).abs();
         if joint.qd.abs() < driven_wheel.max_speed {
@@ -182,7 +179,6 @@ pub fn driven_wheel_lookup_system(
 ) {
     // Iterate once for each car
     for car in &mut players.cars {
-
         let control = &mut car.carcontrol;
 
         for (mut joint, mut driven_wheel) in joints.iter_mut() {
@@ -205,17 +201,19 @@ pub struct BrakeWheel {
 }
 
 impl BrakeWheel {
-    pub fn new(max_torque: f64) -> Self {
+    pub fn new(max_torque: f64, control: Entity) -> Self {
         Self { max_torque }
     }
 }
 
-pub fn brake_wheel_system(mut joints: Query<(&mut Joint, &BrakeWheel)>, mut players: ResMut<CarList>) {
-    for car in &mut players.cars {
-
-        let control = &mut car.carcontrol;
-
-        for (mut joint, brake_wheel) in joints.iter_mut() {
+pub fn brake_wheel_system(
+    mut joints: Query<(&mut Joint, &BrakeWheel)>,
+    // mut players: ResMut<CarList>,
+    controls: Query<&CarControl>,
+) {
+    for control in controls.iter() {
+        for wheel_id in &control.brake_wheels {
+            let (mut joint, brake_wheel) = joints.get(*wheel_id).unwrap();
             // TODO: make better? What to do around zero speed?
             joint.tau += -control.brake as f64 * brake_wheel.max_torque * joint.qd.min(1.).max(-1.);
         }

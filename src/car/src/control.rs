@@ -1,12 +1,13 @@
 use bevy::prelude::*;
 
 use crate::build::CarList;
-#[derive(Component)]
+#[derive(Component, Default)]
 #[component(storage = "SparseSet")]
 pub struct CarControl {
     pub throttle: f32,
     pub steering: f32,
     pub brake: f32,
+    pub brake_wheels: Vec<Entity>,
 }
 
 pub fn user_control_system(
@@ -18,7 +19,6 @@ pub fn user_control_system(
 ) {
     // Iterate once for each car
     for car in &mut players.cars {
-
         let control = &mut car.carcontrol;
         let id = &mut car.id;
 

@@ -9,12 +9,12 @@ use rigid_body::{
 };
 
 use crate::{
-    control::CarControl, 
+    control::CarControl,
     physics::{
         BrakeWheel, DriveType, DrivenWheelLookup, SteeringCurvature, SteeringType,
         SuspensionComponent,
-    }, 
-    tire::PointTire
+    },
+    tire::PointTire,
 };
 
 #[derive(Resource)]
@@ -47,7 +47,7 @@ const GRAVITY: f64 = 9.81;
 
 /*
  * Defines a car's specifications to later be built by car_startup_system().
- * 
+ *
  * Inputs: none
  * Outputs: CarDefinition - The struct containing the car's specifications
  */
@@ -56,7 +56,7 @@ pub fn build_car(startposition: [f64; 3], id: i32) -> CarDefinition {
     let xpos = startposition[0];
     let ypos = startposition[1];
     let zpos = startposition[2];
-    
+
     // Chassis
     let mass = 1000.;
     let dimensions = [3.0_f64, 1.2, 0.4]; // shape of rectangular chassis
@@ -194,15 +194,20 @@ pub fn car_startup_system(mut commands: Commands, mut players: ResMut<CarList>) 
     for car in &mut players.cars {
         println!("Starting up car with id: {}", car.id);
 
+        let control = CarControl::default();
+        let control_id = commands.spawn((control,)).id();
+
         let base = Joint::base(Motion::new([0., 0., 9.81], [0., 0., 0.]));
         let base_id = commands.spawn((base, Base)).id();
-        
+
         let mut rng = rand::thread_rng();
 
         // Chassis
-        let chassis_ids = car
-            .chassis
-            .build(&mut commands, Color::rgb(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>()), base_id);
+        let chassis_ids = car.chassis.build(
+            &mut commands,
+            Color::rgb(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>()),
+            base_id,
+        );
         let chassis_id = chassis_ids[3]; // ids are not ordered by parent child order!!! "3" is rx, the last joint in the chain
 
         let camera_parent_list = vec![
@@ -224,10 +229,12 @@ pub fn car_startup_system(mut commands: Commands, mut players: ResMut<CarList>) 
             let braked_wheel = if ind < 2 {
                 Some(BrakeWheel {
                     max_torque: car.brake.front_torque,
+                    control: control_id,
                 })
             } else {
                 Some(BrakeWheel {
                     max_torque: car.brake.rear_torque,
+                    control: control_id,
                 })
             };
             let id_susp = susp.build(&mut commands, chassis_id, &susp.location);
@@ -366,7 +373,7 @@ impl Suspension {
         // suspension mass
         let inertia = Inertia::new(
             self.mass,
-            Vector::new(0., 0., 0.), // center of mass
+            Vector::new(0., 0., 0.),       // center of mass
             self.moi * Matrix::identity(), // inertia
         );
 
