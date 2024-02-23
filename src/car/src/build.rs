@@ -46,7 +46,7 @@ pub fn build_car() -> CarDefinition {
         dimensions,
         position: [0., 0., 0.],
         initial_position: [-5., 20., 0.3 + 0.25],
-        initial_orientation: [0., 0., 0.],
+        initial_orientation: [0., 0., 1.57],
         mesh_file: Some("models/vehicle/chassis/car_chassisV2.glb#Scene0".to_string()),
     };
 
