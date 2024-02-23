@@ -1,6 +1,7 @@
 use bevy::{
     prelude::{Mesh, Vec3},
     render::{mesh::Indices, render_resource::PrimitiveTopology},
+    math,
 };
 use rigid_body::sva::Vector;
 
@@ -133,18 +134,10 @@ impl GridElement for Perlin {
 
     fn mesh(&self) -> Mesh {  
 
-        // let fbm = Fbm::<PerlinNoise>::new(2348956); // FIX hard coded seed
-
-        // let perlin_noise = PlaneMapBuilder::<_, 2>::new(&fbm)
-        //     .set_size((self.subdivisions + 2) as usize, (self.subdivisions + 2) as usize)
-        //     .set_x_bounds(-1.0, 1.0)
-        //    .set_y_bounds(-1.0, 1.0)
-        //    .build();
-
         let x_vertices = self.subdivisions + 2;
-        let z_vertices = self.subdivisions + 2;
-        let tot_vertices = (x_vertices * z_vertices) as usize;
-        let tot_indices = ((x_vertices - 1) * (z_vertices - 1) * 6) as usize;
+        let y_vertices = self.subdivisions + 2;
+        let tot_vertices = (x_vertices * y_vertices) as usize;
+        let tot_indices = ((x_vertices - 1) * (y_vertices - 1) * 6) as usize;
 
         let mut positions: Vec<[f32; 3]> = Vec::with_capacity(tot_vertices);
         let mut normals: Vec<[f32; 3]> = Vec::with_capacity(tot_vertices);
@@ -153,79 +146,69 @@ impl GridElement for Perlin {
 
 
         for x in 0..x_vertices {
-            for z in 0..z_vertices {
+            for y in 0..y_vertices {
 
                 let xi = x as f64 / (x_vertices - 1) as f64;
-                let zi = z as f64 / (z_vertices - 1) as f64;
-
-
-                // let yi = perlin_noise.get_value(x as usize, z as usize);
-                // let y_pos = yi - 0.5; // ???
-
-                // // Edge on origin
-                // // new_x, new_z = [0, size]
-                // let x_pos = xi * self.size[0];
-                // let z_pos = zi * self.size[1];
-
-
-                // // Centered around origin
-                // // new_x, new_z = [- size/2, + size/2]
-                // //let x_pos = (xi - 0.5) * self.size[0];
-                // //let z_pos = (zi - 0.5) * self.size[1];
-
+                let yi = y as f64 / (y_vertices - 1) as f64;
 
                 let x_pos = self.heightmap.x[x as usize];
-                let z_pos = self.heightmap.y[z as usize];
-                let y_pos = self.heightmap.z[x as usize][z as usize];
+                let y_pos = self.heightmap.y[y as usize];
+                let z_pos = self.heightmap.z[x as usize][y as usize];
+
                 // Build vertices/positions via set of squares
-                // zs and xs flipped to flip on screen since normals were facing down
-                positions.push([x_pos as f32, z_pos as f32, y_pos as f32]);
+                positions.push([x_pos as f32, y_pos as f32, z_pos as f32]);
 
                 // Build normals
                 // Per vertex - Up vector
-                // FIX THIS -- should consider surrounding points to be a not up vector
-
-                normals.push([0.0, 0.0, 1.0]);
+                // FIX THIS, edge cases not yet covered
+                if x == x_vertices - 1  && y == y_vertices - 1 {
+                    normals.push([0.0, 0.0, -1.0]);
+                }
+                else if x == x_vertices - 1 {
+                    normals.push([0.0, 0.0, -1.0]);
+                }
+                else if y == y_vertices - 1 {
+                    normals.push([0.0, 0.0, -1.0]);
+                }
+                else {
+                    let p1 = Vec3{x: x_pos as f32, y: y_pos as f32, z: z_pos as f32};
+                    let p2 = Vec3{x: self.heightmap.x[(x + 1) as usize] as f32, y: y_pos as f32, z: self.heightmap.z[(x + 1) as usize][y as usize] as f32};
+                    let p3 = Vec3{x: x_pos as f32, y: self.heightmap.y[(y + 1) as usize] as f32, z: self.heightmap.z[x as usize][(y + 1) as usize] as f32};
                 
-                // One idea to fix edge cases
+                    let v = p3 - p1;
+                    let u = p2 - p1;
 
-                // if x == x_vertices - 1  && z == z_vertices - 1 {
-                //     normals.push([0.0, 0.0, 1.0]);
-                // }
-                // else if x == x_vertices - 1 {
-                //     normals.push([0.0, 0.0, 1.0]);
-                // }
-                // else if z == z_vertices - 1 {
-                //     normals.push([0.0, 0.0, 1.0]);
-                // }
-                // else {
-                //     normals.push([0.0, 0.0, 1.0]);
-                // }
+                    let n1 = u[1] * v[2] - u[2] * v[1];
+                    let n2 = u[2] * v[0] - u[0] * v[2];
+                    let n3 = u[0] * v[1] - u[1] * v[0];
+
+                    normals.push([n1, n2, n3]);
+                }
 
 
                 // Build uvs
                 // FIX THIS -- it is wrong maybe, but no textures are being used so should be fine
-                uvs.push([xi as f32, zi as f32]);
+                uvs.push([xi as f32, yi as f32]);
             }
         }
 
         for x in 0..x_vertices-1 {
-            for z in 0..z_vertices-1 {
+            for y in 0..y_vertices-1 {
 
                 // build indices
-                let bl = (x * z_vertices) + z;
+                let bl = (x * y_vertices) + y;
                 let tl = bl + 1;
-                let br = bl + z_vertices;
+                let br = bl + y_vertices;
                 let tr = br + 1;
                 
                 // counter-clockwise
 
-                // Triangle 1 xz 00-10-11
+                // Triangle 1 xy 00-10-11
                 indices.push((bl) as u32);
                 indices.push((br) as u32);
                 indices.push((tr) as u32);
 
-                // Triangle 2 xz 00-11-01
+                // Triangle 2 xy 00-11-01
                 indices.push((bl) as u32);
                 indices.push((tr) as u32);
                 indices.push((tl) as u32);
