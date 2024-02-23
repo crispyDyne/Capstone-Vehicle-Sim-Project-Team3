@@ -205,8 +205,9 @@ pub fn camera_builder(
     el: f32,
     radius: f32,
     up_direction: UpDirection,
-) -> impl Fn(Commands) -> () {
-    let spawn_camera = move |mut commands: Commands| {
+    
+) -> impl Fn(Commands, ResMut<Assets<Mesh>>, ResMut<Assets<StandardMaterial>>) -> () {
+    let spawn_camera = move |mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>| {
         let rotation = az_el_rotation(az, el, &up_direction);
         let translation = az_el_translation(focus, rotation, radius);
         let transform = Transform {
@@ -215,8 +216,15 @@ pub fn camera_builder(
             ..default()
         };
 
-        commands
-            .spawn(Camera3dBundle {
+
+        //Spatial listener for audio depth
+        let gap = 4.0;
+        let listener = SpatialListener::new(gap);
+
+         
+
+        let camera =
+        commands.spawn(Camera3dBundle {
                 transform,
                 camera_3d: Camera3d {
                     clear_color: ClearColorConfig::Custom(Color::BLACK),
@@ -230,7 +238,30 @@ pub fn camera_builder(
                 up_direction: up_direction.clone(),
                 azimuth: az,
                 elevation: el,
+            }).id();
+
+        commands.spawn((SpatialBundle::default(), listener.clone()))
+        //Uncomment this if you want to have a mesh represent the Audio Listeners
+        /* 
+        .with_children(|parent| {
+            // left ear indicator
+            parent.spawn(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Cube { size: 0.2 })),
+                material: materials.add(Color::RED.into()),
+                transform: Transform::from_translation(listener.left_ear_offset),
+                ..default()
             });
+    
+            // right ear indicator
+            parent.spawn(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Cube { size: 0.2 })),
+                material: materials.add(Color::GREEN.into()),
+                transform: Transform::from_translation(listener.right_ear_offset),
+                ..default()
+            });
+        
+        })*/.set_parent(camera);
+
 
         commands.init_resource::<PointerOverUi>()
     };

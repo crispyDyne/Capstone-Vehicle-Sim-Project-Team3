@@ -39,6 +39,7 @@ pub fn simulation_setup(app: &mut App) {
 
 pub fn camera_setup(app: &mut App) {
     app.add_systems(
+
         Startup,
         camera_builder(
             Vec3 {

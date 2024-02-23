@@ -24,6 +24,12 @@ pub struct CarDefinition {
     brake: Brake,
 }
 
+#[derive(Component)]
+struct Engine {
+    speed: f32,
+    /*curve: Curve<Coord2>,*/
+}
+
 const CHASSIS_MASS: f64 = 1000.;
 const SUSPENSION_MASS: f64 = 20.;
 const GRAVITY: f64 = 9.81;
@@ -204,6 +210,7 @@ pub fn car_startup_system(mut commands: Commands, asset_server: Res<AssetServer>
             0.,
         );
     }
+
 }
 
 #[derive(Clone)]
@@ -274,14 +281,27 @@ impl Chassis {
         rx_e.set_parent(ry_id);
         let rx_id = rx_e.id();
         
+
+
         //Insert the car chassis into the rx roll degree of freedom joint entity.
         if let Some(_chassis_file) = &self.mesh_file {
-            println!("mesh");
              rx_e.insert(SceneBundle {
                 transform: (&TransformDef::from_position(position)).into(),
                 scene: asset_server.load("models/vehicle/chassis/car_chassis.glb#Scene0"),
                 ..default()
             });
+
+            //todo!("Engine Audio Needs to be hooked up to the A joint's speed");
+            //Setup audio emitter for our engine audio and parent it to our chassis
+            rx_e.insert((
+                AudioBundle {
+                source: asset_server.load("sounds/engine_hum.ogg"),
+                settings: PlaybackSettings::LOOP.with_spatial(true),
+                ..default()
+                },
+                Engine {speed: 0.0},
+            ));
+
         } else {
             rx_e.insert(MeshDef {
                 mesh_type: MeshTypeDef::Box {
@@ -399,7 +419,7 @@ impl Wheel {
         parent_id: Entity,
         driven_wheel: DriveType,
         braked_wheel: Option<BrakeWheel>,
-        initial_speed: f64,
+        initial_speed: f64
     ) -> Entity {
         // wheel inertia
         let inertia = Inertia::new(
@@ -437,6 +457,7 @@ impl Wheel {
                 }
             ));
         }
+        
         
 
         // add driven and braked components
