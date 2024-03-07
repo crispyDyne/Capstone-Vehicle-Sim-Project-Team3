@@ -33,6 +33,5 @@ fn main() {
         .insert_resource(players)
         .add_systems(Startup, car_startup_system)
         .add_systems(Startup, build_environment)
-        //.add_systems(Startup, start_matchbox_socket) // Add create_player here later
         .run();
 }

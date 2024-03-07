@@ -199,23 +199,29 @@ pub fn driven_wheel_lookup_system(
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct BrakeWheel {
     pub max_torque: f64,
+    pub control: Entity,
 }
 
 impl BrakeWheel {
-    pub fn new(max_torque: f64) -> Self {
-        Self { max_torque }
+    pub fn new(max_torque: f64, control: Entity) -> Self {
+        Self { 
+            max_torque,
+            control,
+        }
     }
 }
 
-pub fn brake_wheel_system(mut joints: Query<(&mut Joint, &BrakeWheel)>, mut players: ResMut<CarList>) {
-    for car in &mut players.cars {
-
-        let control = &mut car.carcontrol;
-
-        for (mut joint, brake_wheel) in joints.iter_mut() {
+pub fn brake_wheel_system(
+    mut joints: Query<(&mut Joint, &BrakeWheel)>,
+    // mut players: ResMut<CarList>,
+    controls: Query<&CarControl>,
+) {
+    for control in controls.iter() {
+        for wheel_id in &control.brake_wheels {
+            let (mut joint, brake_wheel) = joints.get_mut(*wheel_id).unwrap();
             // TODO: make better? What to do around zero speed?
             joint.tau += -control.brake as f64 * brake_wheel.max_torque * joint.qd.min(1.).max(-1.);
         }
