@@ -251,12 +251,14 @@ pub fn car_startup_system(mut commands: Commands, mut players: ResMut<CarList>) 
             );
 
             // Fill brake_wheel_ids with the ids of the BrakeWheels of this car
-            if let Some(this_car) = &braked_wheel {
-                brake_wheel_ids.push(this_car.control); 
+            if let Some(this_car_brake) = braked_wheel {
+                brake_wheel_ids.push(this_car_brake.control);
+                println!("Brake wheel found: {:?}", this_car_brake.control)
             } else {
                 println!("No brake wheel present");
             }
         }
+        car.carcontrol.brake_wheels = brake_wheel_ids; // update the car
     }
 }
 

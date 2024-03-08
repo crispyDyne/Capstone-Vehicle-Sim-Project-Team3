@@ -221,6 +221,7 @@ pub fn brake_wheel_system(
 ) {
     for control in controls.iter() {
         for wheel_id in &control.brake_wheels {
+            println!("Brake wheel system: {:?}", *wheel_id);
             let (mut joint, brake_wheel) = joints.get_mut(*wheel_id).unwrap();
             // TODO: make better? What to do around zero speed?
             joint.tau += -control.brake as f64 * brake_wheel.max_torque * joint.qd.min(1.).max(-1.);
