@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use bevy_integrator::{SimTime, Solver};
 use car::{
     build::{build_car, car_startup_system, CarList},
+    control::ControlType,
     environment::build_environment,
     setup::{camera_setup, simulation_setup},
 };
@@ -14,8 +15,8 @@ use rigid_body::plugin::RigidBodyPlugin;
 fn main() {
     // Create cars
     let mut car_definitions = Vec::new();
-    car_definitions.push(build_car([0., 0., 0.], 0));
-    car_definitions.push(build_car([0., 2., 0.], 1));
+    car_definitions.push(build_car([0., 0., 0.], ControlType::WASD, 0));
+    car_definitions.push(build_car([0., 2., 0.], ControlType::Arrow, 1));
 
     let players = CarList {
         cars: car_definitions,

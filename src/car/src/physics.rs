@@ -6,7 +6,6 @@ use rigid_body::joint::Joint;
 
 use crate::interpolate::Interpolator1D;
 
-use super::build::CarList;
 use super::control::CarControl;
 
 #[derive(Component)]
@@ -51,11 +50,8 @@ impl Steering {
     }
 }
 
-pub fn steering_system(mut joints: Query<(&mut Joint, &Steering)>, mut players: ResMut<CarList>) {
-    for car in &mut players.cars {
-
-        let control = &mut car.carcontrol;
-    
+pub fn steering_system(mut joints: Query<(&mut Joint, &Steering)>, controls: Query<&CarControl>) {
+    for control in controls.iter() {
         for (mut joint, steering) in joints.iter_mut() {
             joint.q = control.steering as f64 * steering.max_angle;
         }
@@ -81,18 +77,22 @@ impl SteeringCurvature {
 
 pub fn steering_curvature_system(
     mut joints: Query<(&mut Joint, &SteeringCurvature)>,
-    mut players: ResMut<CarList>,
+    controls: Query<&CarControl>,
 ) {
-    // Iterate once for each car
-    for car in &mut players.cars {
-
-        let control = &mut car.carcontrol;
-
-        for (mut joint, steering) in joints.iter_mut() {
-            let vehicle_curvature_target = steering.max_curvature * control.steering as f64;
-            let wheel_curvature_target =
-                vehicle_curvature_target / (1.0 - vehicle_curvature_target * steering.y);
-            joint.q = (wheel_curvature_target * steering.x).atan();
+    for control in controls.iter() {
+        // car addresses
+        for wheel_id in &control.brake_wheels {
+            // wheel addresses
+            match joints.get_mut(*wheel_id) {
+                // joint OBJECTS
+                Ok((mut joint, steering)) => {
+                    let vehicle_curvature_target = steering.max_curvature * control.steering as f64;
+                    let wheel_curvature_target =
+                        vehicle_curvature_target / (1.0 - vehicle_curvature_target * steering.y);
+                    joint.q = (wheel_curvature_target * steering.x).atan();
+                }
+                Err(_) => {}
+            }
         }
     }
 }
@@ -122,10 +122,7 @@ impl DrivenWheel {
 }
 
 // Note to self: Wheel speed use is here
-pub fn driven_wheel_system(
-    mut joints: Query<(&mut Joint, &DrivenWheel)>,
-    control: CarControl,
-) {
+pub fn driven_wheel_system(mut joints: Query<(&mut Joint, &DrivenWheel)>, control: CarControl) {
     for (mut joint, driven_wheel) in joints.iter_mut() {
         let power_limited_torque = (driven_wheel.max_power / joint.qd).abs();
         if joint.qd.abs() < driven_wheel.max_speed {
@@ -178,23 +175,24 @@ impl DrivenWheelLookup {
 
 pub fn driven_wheel_lookup_system(
     mut joints: Query<(&mut Joint, &mut DrivenWheelLookup)>,
-    mut players: ResMut<CarList>,
+    controls: Query<&CarControl>,
 ) {
-    // Iterate once for each car
-    for car in &mut players.cars {
-
-        let control = &mut car.carcontrol;
-
-        for (mut joint, mut driven_wheel) in joints.iter_mut() {
-            let torque_limit = driven_wheel.limit_torque(joint.qd).abs();
-            let commanded_torque = control.throttle as f64 * torque_limit;
-            joint.tau += commanded_torque;
-            driven_wheel
-                .outputs
-                .insert("torque".to_string(), commanded_torque);
-            driven_wheel
-                .outputs
-                .insert("torque_limit".to_string(), torque_limit);
+    for control in controls.iter() {
+        for wheel_id in &control.brake_wheels {
+            match joints.get_mut(*wheel_id) {
+                Ok((mut joint, mut driven_wheel)) => {
+                    let torque_limit = driven_wheel.limit_torque(joint.qd).abs();
+                    let commanded_torque = control.throttle as f64 * torque_limit;
+                    joint.tau += commanded_torque;
+                    driven_wheel
+                        .outputs
+                        .insert("torque".to_string(), commanded_torque);
+                    driven_wheel
+                        .outputs
+                        .insert("torque_limit".to_string(), torque_limit);
+                }
+                Err(_) => {}
+            }
         }
     }
 }
@@ -207,7 +205,7 @@ pub struct BrakeWheel {
 
 impl BrakeWheel {
     pub fn new(max_torque: f64, control: Entity) -> Self {
-        Self { 
+        Self {
             max_torque,
             control,
         }
@@ -220,11 +218,17 @@ pub fn brake_wheel_system(
     controls: Query<&CarControl>,
 ) {
     for control in controls.iter() {
+        // car addresses
         for wheel_id in &control.brake_wheels {
-            println!("Brake wheel system: {:?}", *wheel_id);
-            let (mut joint, brake_wheel) = joints.get_mut(*wheel_id).unwrap();
-            // TODO: make better? What to do around zero speed?
-            joint.tau += -control.brake as f64 * brake_wheel.max_torque * joint.qd.min(1.).max(-1.);
+            // wheel addresses
+            match joints.get_mut(*wheel_id) {
+                // joint OBJECTS
+                Ok((mut joint, brake_wheel)) => {
+                    joint.tau +=
+                        -control.brake as f64 * brake_wheel.max_torque * joint.qd.min(1.).max(-1.)
+                }
+                Err(_) => {}
+            }
         }
     }
 }

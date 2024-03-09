@@ -1,13 +1,21 @@
 use bevy::prelude::*;
 
-use crate::build::CarList;
-#[derive(Component, Default)]
+#[derive(Component, Default, Clone)]
 #[component(storage = "SparseSet")]
 pub struct CarControl {
     pub throttle: f32,
     pub steering: f32,
     pub brake: f32,
     pub brake_wheels: Vec<Entity>,
+    pub drive_wheels: Vec<Entity>,
+    pub control_type: ControlType,
+}
+
+#[derive(Default, Clone)]
+pub enum ControlType {
+    #[default]
+    WASD,
+    Arrow,
 }
 
 pub fn user_control_system(
@@ -15,12 +23,10 @@ pub fn user_control_system(
     gamepads: Res<Gamepads>,
     button_axes: Res<Axis<GamepadButton>>,
     axes: Res<Axis<GamepadAxis>>,
-    mut players: ResMut<CarList>,
+    mut controls: Query<&mut CarControl>,
 ) {
     // Iterate once for each car
-    for car in &mut players.cars {
-        let control = &mut car.carcontrol;
-
+    for mut control in controls.iter_mut() {
         // gamepad controls
         for gamepad in gamepads.iter() {
             // trigger controls
@@ -70,34 +76,68 @@ pub fn user_control_system(
         // between -1 and 1 for steering.
         let response_time = 0.25;
         let time_constant = 1. / (response_time * 60.);
-        //if (id == 0) {
-        if keyboard_input.pressed(KeyCode::W) {
-            control.throttle += time_constant;
-            control.throttle = control.throttle.min(1.0);
-        } else {
-            control.throttle -= time_constant;
-            control.throttle = control.throttle.max(0.0);
-        }
-
-        if keyboard_input.pressed(KeyCode::S) {
-            control.brake += time_constant;
-            control.brake = control.brake.min(1.0);
-        } else {
-            control.brake -= time_constant;
-            control.brake = control.brake.max(0.0);
-        }
 
         let mut steer_active = false;
-        if keyboard_input.pressed(KeyCode::A) {
-            control.steering += time_constant;
-            control.steering = control.steering.min(1.0);
-            steer_active = true;
-        }
 
-        if keyboard_input.pressed(KeyCode::D) {
-            control.steering -= time_constant;
-            control.steering = control.steering.max(-1.0);
-            steer_active = true;
+        match control.control_type {
+            ControlType::WASD => {
+                if keyboard_input.pressed(KeyCode::W) {
+                    control.throttle += time_constant;
+                    control.throttle = control.throttle.min(1.0);
+                } else {
+                    control.throttle -= time_constant;
+                    control.throttle = control.throttle.max(0.0);
+                }
+
+                if keyboard_input.pressed(KeyCode::S) {
+                    control.brake += time_constant;
+                    control.brake = control.brake.min(1.0);
+                } else {
+                    control.brake -= time_constant;
+                    control.brake = control.brake.max(0.0);
+                }
+
+                if keyboard_input.pressed(KeyCode::A) {
+                    control.steering += time_constant;
+                    control.steering = control.steering.min(1.0);
+                    steer_active = true;
+                }
+
+                if keyboard_input.pressed(KeyCode::D) {
+                    control.steering -= time_constant;
+                    control.steering = control.steering.max(-1.0);
+                    steer_active = true;
+                }
+            }
+            ControlType::Arrow => {
+                if keyboard_input.pressed(KeyCode::Up) {
+                    control.throttle += time_constant;
+                    control.throttle = control.throttle.min(1.0);
+                } else {
+                    control.throttle -= time_constant;
+                    control.throttle = control.throttle.max(0.0);
+                }
+
+                if keyboard_input.pressed(KeyCode::Down) {
+                    control.brake += time_constant;
+                    control.brake = control.brake.min(1.0);
+                } else {
+                    control.brake -= time_constant;
+                    control.brake = control.brake.max(0.0);
+                }
+
+                if keyboard_input.pressed(KeyCode::Left) {
+                    control.steering += time_constant;
+                    control.steering = control.steering.min(1.0);
+                    steer_active = true;
+                }
+
+                if keyboard_input.pressed(KeyCode::Right) {
+                    control.steering -= time_constant;
+                    control.steering = control.steering.max(-1.0);
+                    steer_active = true;
+                }
+            }
         }
 
         if !steer_active {

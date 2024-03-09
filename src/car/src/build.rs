@@ -9,7 +9,7 @@ use rigid_body::{
 };
 
 use crate::{
-    control::CarControl,
+    control::{CarControl, ControlType},
     physics::{
         BrakeWheel, DriveType, DrivenWheelLookup, SteeringCurvature, SteeringType,
         SuspensionComponent,
@@ -51,7 +51,7 @@ const GRAVITY: f64 = 9.81;
  * Inputs: none
  * Outputs: CarDefinition - The struct containing the car's specifications
  */
-pub fn build_car(startposition: [f64; 3], id: i32) -> CarDefinition {
+pub fn build_car(startposition: [f64; 3], control_type: ControlType, id: i32) -> CarDefinition {
     // Separate the start position into x, y, z coordinates
     let xpos = startposition[0];
     let ypos = startposition[1];
@@ -154,6 +154,8 @@ pub fn build_car(startposition: [f64; 3], id: i32) -> CarDefinition {
         steering: 0.,
         brake: 0.,
         brake_wheels: Vec::new(), // Initialize the BrakeWheels vector
+        drive_wheels: Vec::new(),
+        control_type,
     };
 
     CarDefinition {
@@ -225,7 +227,7 @@ pub fn car_startup_system(mut commands: Commands, mut players: ResMut<CarList>) 
             list: camera_parent_list,
             active: 0, // start with following x, y, z and yaw of chassis
         });
-        
+
         let mut brake_wheel_ids = Vec::new(); // fill this with ids and set car.carcontrol.brake_wheels
 
         for (ind, susp) in car.suspension.iter().enumerate() {
@@ -241,7 +243,7 @@ pub fn car_startup_system(mut commands: Commands, mut players: ResMut<CarList>) 
                 })
             };
             let id_susp = susp.build(&mut commands, chassis_id, &susp.location);
-            let _wheel_id = car.wheel.build(
+            let wheel_id = car.wheel.build(
                 &mut commands,
                 &susp.name,
                 id_susp,
@@ -250,15 +252,12 @@ pub fn car_startup_system(mut commands: Commands, mut players: ResMut<CarList>) 
                 0.,
             );
 
-            // Fill brake_wheel_ids with the ids of the BrakeWheels of this car
-            if let Some(this_car_brake) = braked_wheel {
-                brake_wheel_ids.push(this_car_brake.control);
-                println!("Brake wheel found: {:?}", this_car_brake.control)
-            } else {
-                println!("No brake wheel present");
-            }
+            // Fill the brake_wheel_ids vector with the ids of the BrakeWheels of this car
+            brake_wheel_ids.push(wheel_id);
+            println!("Brake wheel found (build): {:?}", wheel_id);
         }
         car.carcontrol.brake_wheels = brake_wheel_ids; // update the car
+        commands.spawn(car.carcontrol.clone());
     }
 }
 
