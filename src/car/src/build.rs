@@ -153,6 +153,7 @@ pub fn build_car(startposition: [f64; 3], control_type: ControlType, id: i32) ->
         throttle: 0.,
         steering: 0.,
         brake: 0.,
+        steer_wheels: Vec::new(),
         brake_wheels: Vec::new(), // Initialize the BrakeWheels vector
         drive_wheels: Vec::new(),
         control_type,
@@ -194,14 +195,16 @@ pub fn build_wheel() -> Wheel {
 }
 
 pub fn car_startup_system(mut commands: Commands, mut players: ResMut<CarList>) {
+    let base = Joint::base(Motion::new([0., 0., 9.81], [0., 0., 0.]));
+    let base_id = commands.spawn((base, Base)).id();
+
+    let mut camera_parent_list = Vec::new();
+    camera_parent_list.push(base_id);
     for car in &mut players.cars {
         println!("Starting up car with id: {}", car.id);
 
         let control = CarControl::default();
         let control_id = commands.spawn((control,)).id();
-
-        let base = Joint::base(Motion::new([0., 0., 9.81], [0., 0., 0.]));
-        let base_id = commands.spawn((base, Base)).id();
 
         let mut rng = rand::thread_rng();
 
@@ -213,22 +216,10 @@ pub fn car_startup_system(mut commands: Commands, mut players: ResMut<CarList>) 
         );
         let chassis_id = chassis_ids[3]; // ids are not ordered by parent child order!!! "3" is rx, the last joint in the chain
 
-        let camera_parent_list = vec![
-            chassis_ids[5], // follow x, y and z and yaw of chassis
-            // chassis_ids[0], // only follow x of chassis (why would you do that?)
-            chassis_ids[1], // follow x and y of chassis
-            chassis_ids[2], // follow x, y and z of chassis
-            chassis_ids[3], // follow all motion of chassis
-            base_id,        // stationary camera
-                            // chassis_ids[4],
-        ];
-
-        commands.insert_resource(CameraParentList {
-            list: camera_parent_list,
-            active: 0, // start with following x, y, z and yaw of chassis
-        });
+        camera_parent_list.push(chassis_ids[5]);
 
         let mut brake_wheel_ids = Vec::new(); // fill this with ids and set car.carcontrol.brake_wheels
+        let mut steer_wheel_ids = Vec::new(); // fill this with ids and set car.carcontrol.steer_wheels
 
         for (ind, susp) in car.suspension.iter().enumerate() {
             let braked_wheel = if ind < 2 {
@@ -242,11 +233,11 @@ pub fn car_startup_system(mut commands: Commands, mut players: ResMut<CarList>) 
                     control: control_id,
                 })
             };
-            let id_susp = susp.build(&mut commands, chassis_id, &susp.location);
+            let (susp_id, maybe_steer_id) = susp.build(&mut commands, chassis_id, &susp.location);
             let wheel_id = car.wheel.build(
                 &mut commands,
                 &susp.name,
-                id_susp,
+                susp_id,
                 car.drives[ind].clone(),
                 braked_wheel.clone(),
                 0.,
@@ -254,11 +245,20 @@ pub fn car_startup_system(mut commands: Commands, mut players: ResMut<CarList>) 
 
             // Fill the brake_wheel_ids vector with the ids of the BrakeWheels of this car
             brake_wheel_ids.push(wheel_id);
+            if let Some(wheel_id) = maybe_steer_id {
+                steer_wheel_ids.push(wheel_id);
+            }
             println!("Brake wheel found (build): {:?}", wheel_id);
         }
         car.carcontrol.brake_wheels = brake_wheel_ids; // update the car
+        car.carcontrol.steer_wheels = steer_wheel_ids; // update the car
         commands.spawn(car.carcontrol.clone());
     }
+
+    commands.insert_resource(CameraParentList {
+        list: camera_parent_list,
+        active: 1, // start with following x, y, z and yaw of chassis
+    });
 }
 
 #[derive(Clone)]
@@ -374,7 +374,7 @@ impl Suspension {
         commands: &mut Commands,
         mut parent_id: Entity,
         location: &[f64; 3],
-    ) -> Entity {
+    ) -> (Entity, Option<Entity>) {
         // suspension transform
         let mut xt_susp = Xform::new(
             Vector::new(location[0], location[1], location[2]), // location of suspension relative to chassis
@@ -388,12 +388,14 @@ impl Suspension {
             self.moi * Matrix::identity(), // inertia
         );
 
+        let mut steer_id = None;
         match self.steering.clone() {
             SteeringType::None => {}
             SteeringType::Curvature(steering) => {
                 let steer_name = ("steer_".to_owned() + &self.name).to_string();
                 let steer = Joint::rz(steer_name, Inertia::zero(), xt_susp);
                 let mut steer_e = commands.spawn((steer, steering));
+                steer_id = Some(steer_e.id());
                 steer_e.set_parent(parent_id);
 
                 parent_id = steer_e.id();
@@ -404,6 +406,7 @@ impl Suspension {
                 let steer_name = ("steer_".to_owned() + &self.name).to_string();
                 let steer = Joint::rz(steer_name, Inertia::zero(), xt_susp);
                 let mut steer_e = commands.spawn((steer, steering));
+                steer_id = Some(steer_e.id());
                 steer_e.set_parent(parent_id);
 
                 parent_id = steer_e.id();
@@ -423,7 +426,7 @@ impl Suspension {
         ));
         susp_e.set_parent(parent_id);
 
-        susp_e.id()
+        (susp_e.id(), steer_id)
     }
 }
 

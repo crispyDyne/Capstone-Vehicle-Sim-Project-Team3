@@ -6,6 +6,7 @@ pub struct CarControl {
     pub throttle: f32,
     pub steering: f32,
     pub brake: f32,
+    pub steer_wheels: Vec<Entity>,
     pub brake_wheels: Vec<Entity>,
     pub drive_wheels: Vec<Entity>,
     pub control_type: ControlType,

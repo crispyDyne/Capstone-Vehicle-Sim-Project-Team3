@@ -81,7 +81,7 @@ pub fn steering_curvature_system(
 ) {
     for control in controls.iter() {
         // car addresses
-        for wheel_id in &control.brake_wheels {
+        for wheel_id in &control.steer_wheels {
             // wheel addresses
             match joints.get_mut(*wheel_id) {
                 // joint OBJECTS
